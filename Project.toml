@@ -1,7 +1,7 @@
 name = "Flexpart"
 uuid = "fb362612-c2d8-4302-a9fd-a07f2890630f"
 authors = ["Tristan Carion <tristancarion@gmail.com> and contributors"]
-version = "0.2.0"
+version = "0.1.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
