@@ -42,7 +42,7 @@ const PATH_PYTHON_SCRIPTS = Dict(
 
 const PYTHON_EXECUTABLE = PyCall.python
 
-
+_default_control(filename) = joinpath(PATH_FLEXEXTRACT_CONTROL_DIR, filename)
 # const ecmwfapi = PyNULL()
 # const ecmwf_public_server = PyNULL()
 # const ecmwf_mars_server = PyNULL()
@@ -102,43 +102,33 @@ mutable struct FePathnames <: AbstractPathnames
     output::AbstractString
     controlfile::AbstractString
 end
-FePathnames() = FePathnames("./input", "./output", PATH_FLEXEXTRACT_DEFAULT_CONTROL)
+FePathnames(;control = FLEX_DEFAULT_CONTROL) = FePathnames("./input", "./output", _default_control(control))
 FePathnames(controlpath::AbstractString) = FePathnames("./input", "./output", controlpath)
 
 struct FlexExtractDir <: AbstractFlexDir
     path::AbstractString
     pathnames::FePathnames
 end
-function FlexExtractDir(fepath::AbstractString, controlpath::AbstractString)
-    fepath = abspath(fepath)
-    FlexExtractDir(abspath(fepath), FePathnames("input", "output", abspath(controlpath)))
+FlexExtractDir(fepath::AbstractString, controlpath::AbstractString) = FlexExtractDir(abspath(fepath), FePathnames("input", "output", relpath(controlpath, fepath)))
+
+function FlexExtractDir(fepath::AbstractString)
+    files = readdir(fepath)
+    icontrol = findfirst(x -> occursin("CONTROL", x), files .|> basename)
+    isnothing(icontrol) && error("No control file has been found in $fepath")
+    FlexExtractDir(fepath, FePathnames("input", "output", files[icontrol]))
 end
-# function FlexExtractDir(fepath::AbstractString)
-#     files = readdir(fepath, join=true)
-#     icontrol = findfirst(x -> occursin("CONTROL", x), files .|> basename)
-#     fecontrol = isnothing(icontrol) ? FeControl(PATH_FLEXEXTRACT_DEFAULT_CONTROL) : FeControl(files[icontrol])
-#     FlexExtractDir(fepath, FePathnames())
-# end
-# FlexExtractDir(fepath::AbstractString, fcontrol::FeControl) = FlexExtractDir(fepath, fcontrol, FePathnames())
 FlexExtractDir(fepath::AbstractString, fcontrolpath::AbstractString, inpath::AbstractString, outpath::AbstractString) =
     FlexExtractDir(fepath, FePathnames(inpath, outpath, fcontrolpath))
 FlexExtractDir() = create(mktempdir())
 getpathnames(fedir::FlexExtractDir) = fedir.pathnames
-# getcontrol(fedir::FlexExtractDir) = fedir.control
-# getpath(fedir::FlexExtractDir) = fedir.path
-# controlpath(fedir::FlexExtractDir) = joinpath(abspath(fedir.path), fedir.control.name)
-# Base.show(io::IO, fedir::FlexExtractDir) = show(io, "FlexExtractDir @ ", fedir.path)
 function Base.show(io::IO, mime::MIME"text/plain", fedir::FlexExtractDir)
     println(io, "FlexExtractDir @ ", fedir.path)
     show(io, mime, fedir.pathnames)
-    # print(io, "\n")
-    # print(io, "with Control file:")
-    # show(io, mime, FeControl(fedir))
 end
 
-function create(path::AbstractString; force = false)
+function create(path::AbstractString; force = false, control = FLEX_DEFAULT_CONTROL)
     mkpath(path)
-    default_pn = FePathnames()
+    default_pn = FePathnames(;control = control)
     mkpath(joinpath(path, default_pn[:input]))
     mkpath(joinpath(path, default_pn[:output]))
     fn = cp(default_pn[:controlfile], joinpath(path, basename(default_pn[:controlfile])), force = force)
@@ -157,7 +147,7 @@ FeControl() = FeControl(PATH_FLEXEXTRACT_DEFAULT_CONTROL)
 
 function add_exec_path(fcontrol::FeControl)
     push!(fcontrol, CALC_ETADOT_PARAMETER => PATH_CALC_ETADOT)
-    write(fcontrol)
+    save(fcontrol)
 end
 add_exec_path(fedir::FlexExtractDir) = add_exec_path(FeControl(fedir))
 
@@ -308,35 +298,10 @@ function control2dict(filepath) :: OrderedDict{Symbol, Any}
     end
 end
 
-
-# function write(fcontrol::FeControl, newpath::String)
-#     # dest = newpath == "" ? fcontrol.path : joinpath(dirname(newpath), basename(fcontrol.path))
-#     dest = joinpath(newpath, fcontrol.name)
-#     (tmppath, tmpio) = mktemp()
-    
-#     for line in format(fcontrol) Base.write(tmpio, line*"\n") end
-    
-#     close(tmpio)
-#     mv(tmppath, dest, force=true)
-# end
-
-function write(fcontrol::FeControl)
-    # dest = newpath == "" ? fcontrol.path : joinpath(dirname(newpath), basename(fcontrol.path))
+function save(fcontrol::FeControl)
     dest = fcontrol.path
     writelines(dest, format(fcontrol))
-    # (tmppath, tmpio) = mktemp()
-    
-    # for line in format(fcontrol) Base.write(tmpio, line*"\n") end
-    
-    # close(tmpio)
-    # mv(tmppath, dest, force=true)
 end
-
-# function write(fcontrol::FeControl)
-#     write(fcontrol, fcontrol.path)
-# end
-
-# write(fedir::FlexExtractDir) = write(FeControl(fedir))
 
 function format(fcontrol::FeControl)::Vector{String}
     ["$(uppercase(String(k))) $v" for (k,v) in fcontrol]
@@ -398,23 +363,5 @@ function set_steps!(fcontrol::FeControl, startdate, enddate, timestep)
     merge!(fcontrol, newd)
 end
 set_steps!(fedir::FlexExtractDir, startdate, enddate, timestep) = set_steps!(fedir.control, startdate, enddate, timestep)
-
-# function Base.merge!(fcontrol::FeControl, newv::Dict{Symbol, <:Any})
-#     merge!(parent(fcontrol), newv)
-# end
-
-# function Base.getproperty(req::MarsRequest, name::Symbol) 
-#     if name !== :dict
-#         get(req)[name]
-#     else
-#         getfield(req, name)
-#     end
-# end
-# function Base.setproperty!(req::MarsRequest, val, name::Symbol)
-#     get(req)[name] = val
-# end
-# function format_opt(opt::Int)
-#     opt < 10 ? "0$(opt)" : "$(opt)"
-# end
 
 end
