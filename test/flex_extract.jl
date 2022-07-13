@@ -24,7 +24,7 @@ end
     fcontrol = FeControl(fedir)
     knew, vnew = :REQUEST, 1
     push!(fcontrol, knew => vnew)
-    FlexExtract.write(fcontrol)
+    FlexExtract.save(fcontrol)
     @test FlexExtract.format(fcontrol)[end] == "$knew $vnew"
 end
 

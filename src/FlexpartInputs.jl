@@ -166,15 +166,15 @@ end
 # """
 # readav(fpdir::FlexpartDir)::FlexpartInput = FlexpartInput(fpdir, Available(fpdir))
 
-# function Flexpart.write(fpinput::FlexpartInput)
+# function Flexpart.save(fpinput::FlexpartInput)
 #     av = available(fpinput)
 #     fpdir = getfpdir(fpinput)
 #     dest = fpdir[:available]
 
-#     Flexpart.write(av, dest)
+#     Flexpart.save(av, dest)
 # end
 
-function Flexpart.write(av::Available)
+function Flexpart.save(av::Available)
     (tmppath, tmpio) = mktemp()
 
     for line in format(av) Base.write(tmpio, line*"\n") end

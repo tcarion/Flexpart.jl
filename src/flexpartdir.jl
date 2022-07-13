@@ -157,7 +157,7 @@ pathnames_path(fpdir::FlexpartDir) = joinpath(getpath(fpdir), DEFAULT_PATH_PATHN
 
 Write the current `FlexpartDir` paths to the `pathnames` file.
 """
-function write(fpdir::FlexpartDir)
+function save(fpdir::FlexpartDir)
     open(pathnames_path(fpdir), "w") do f
         for (_, v) in getpathnames(fpdir)
             Base.write(f, v*"\n")
@@ -168,10 +168,10 @@ end
 """
     $(TYPEDSIGNATURES)
 
-Write the current `FlexpartDir` paths to the `pathnames` file. Realtive paths are converted
+Write the current `FlexpartDir` paths to the `pathnames` file. Relative paths are converted
 to absolute path.
 """
-function writeabs(fpdir::FlexpartDir)
+function saveabs(fpdir::FlexpartDir)
     open(pathnames_path(fpdir), "w") do f
         for (k, _) in getpathnames(fpdir)
             Base.write(f, fpdir[k]*"\n")

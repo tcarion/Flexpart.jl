@@ -17,6 +17,8 @@ PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 
 [compat]
 CSV = "0.10"
+PyCall = "1"
+GRIB = "0.3"
 julia = "1"
 
 [extras]
