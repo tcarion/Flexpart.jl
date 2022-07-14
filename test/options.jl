@@ -30,7 +30,7 @@ end
 end
 
 @testset "Write options" begin
-    Flexpart.write(fpoptions)
+    Flexpart.save(fpoptions)
 end
 
 @testset "other" begin
