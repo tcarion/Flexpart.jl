@@ -251,7 +251,7 @@ function format(opt::OptionType)
     lines
 end
 
-function Flexpart.write(flexpartoption::FlexpartOption, newpath::String = "")
+function Flexpart.save(flexpartoption::FlexpartOption, newpath::String = "")
     flexpartoption.dirpath == "" && error("Path to option directory is empty")
     options_dir = newpath == "" ? flexpartoption.dirpath : newpath
     try

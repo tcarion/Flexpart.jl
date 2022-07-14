@@ -37,7 +37,7 @@ function _run_helper(fpdir::FlexpartDir{Deterministic}; f = nothing)
     tempfpdir[:input] = fpdir[:input]
     tempfpdir[:available] = fpdir[:available]
 
-    write(tempfpdir)
+    save(tempfpdir)
     cmd = getcmd(tempfpdir)
     # println("Will run Flexpart with following pathnames: ")
     # println(tempfpdir.pathnames)
@@ -71,15 +71,12 @@ function _run_helper(fpdir::FlexpartDir{Ensemble})
         det_inputs = convert.(DeterministicInput, realization)
         real_av = Available(det_inputs)
         fpinput = FlexpartInput(tempfpdir, real_av)
-        write(fpinput)
-        writeabs(tempfpdir)
+        save(fpinput)
+        saveabs(tempfpdir)
         
         log_path = joinpath(getpath(fpdir), "member$(imember).log")
         @async open(log_path, "w") do logf
             run(tempfpdir) do io
-                # line = readline(io, keep=true)
-                # Base.write(logf, line)
-                # flush(logf)
                 log_output(io, logf)
             end
         end 
@@ -112,7 +109,7 @@ function dummy_run(fpdir::FlexpartDir{Deterministic})
     gridres, _ = Flexpart.grib_resolution(avs[1])
     outgrid = Flexpart.area2outgrid(fpdir, gridres)
     merge!(options["OUTGRID"][:OUTGRID], outgrid)
-    Flexpart.write(avs)
-    Flexpart.write(options)
+    Flexpart.save(avs)
+    Flexpart.save(options)
     Flexpart.run(fpdir)
 end
