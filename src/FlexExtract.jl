@@ -198,6 +198,7 @@ function submit(fedir::FlexExtractDir)
     adapt_and_run(cmd)
 end
 
+# Works only on Julia 1.7
 function submit(f::Function, fedir::FlexExtractDir)
     add_exec_path(fedir)
     cmd = submitcmd(fedir)
@@ -207,8 +208,13 @@ function submit(f::Function, fedir::FlexExtractDir)
         f(pipe)
     end
 
-    cmd = pipeline(adapt_env(cmd), stdout=pipe, stderr=pipe)
-    run(cmd)
+    redirect_stdio(; stderr = pipe, stdout = pipe) do 
+        adapt_and_run(cmd)
+        # retrieve(req; polytope = polytope)
+    end
+    
+    # cmd = pipeline(adapt_env(cmd), stdout=pipe, stderr=pipe)
+    # run(cmd)
 end
 
 function retrieve(request; polytope = false)
@@ -225,12 +231,12 @@ end
 function retrieve(f::Function, req; polytope = false)
     pipe = Pipe()
 
-    redirect_stdout(pipe) do 
-        retrieve(req; polytope = polytope)
-    end
-
     @async while true
         f(pipe)
+    end
+    
+    redirect_stdio(; stderr = pipe, stdout = pipe) do 
+        retrieve(req; polytope = polytope)
     end
 end
 
@@ -262,6 +268,7 @@ function prepare(fedir::FlexExtractDir)
     adapt_and_run(cmd)
 end
 
+# Works only on Julia 1.7
 function prepare(f::Function, fedir::FlexExtractDir)
     add_exec_path(fedir)
     cmd = preparecmd(fedir)
@@ -271,7 +278,11 @@ function prepare(f::Function, fedir::FlexExtractDir)
         f(pipe)
     end
 
-    adapt_and_run(pipeline(cmd, stdout=pipe, stderr=pipe))
+    redirect_stdio(; stderr = pipe, stdout = pipe) do 
+        adapt_and_run(cmd)
+        # retrieve(req; polytope = polytope)
+    end
+    
 end
 
 function feparams(control::String, input::String, output::String)

@@ -26,7 +26,7 @@ FpPathnames() = FpPathnames(DEFAULT_PATHNAMES...)
 
 """
     $(TYPEDEF)
-The `FlexpartDir` is basically the directory where the `pathnames` file is located. `pathnames` is the file indicating the paths 
+`FlexpartDir` represents the directory where the `pathnames` file is located. `pathnames` is the file indicating the paths 
 to the files and directories needed by Flexpart (options, output, input and available).
 
 The `FlexpartDir` object also indicates the type of the simulation:
