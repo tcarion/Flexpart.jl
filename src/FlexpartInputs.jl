@@ -3,6 +3,7 @@ module FlexpartInputs
 using ..Flexpart: Flexpart, FlexpartDir, SimType, Deterministic, Ensemble, dateYY
 using Dates
 using DocStringExtensions
+import Flexpart: getpath
 
 export 
     InputFiles, 

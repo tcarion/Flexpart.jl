@@ -80,6 +80,7 @@ include("utils.jl")
 include("FlexpartInputs.jl")
 include("FlexpartOptions.jl")
 include("outputs.jl")
+include("readinput.jl")
 include("FlexExtract.jl")
 include("run.jl")
 
