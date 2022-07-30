@@ -8,7 +8,10 @@
 # """
 # abstract type AbstractFlexpartDir end
 
-@enum SimType Deterministic Ensemble
+abstract type SimType end
+
+abstract type Deterministic <: SimType end
+abstract type Ensemble <: SimType end
 
 """
     FpPathnames

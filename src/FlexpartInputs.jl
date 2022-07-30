@@ -70,56 +70,49 @@ function _input_helper(path::String, T)
         T == Deterministic ? DeterministicInput(dateYY.(formated_date), filename, dirpath) : EnsembleInput(dateYY.(formated_date), filename, parse(Int, m.captures[4]), dirpath)
     end
 end
-struct InputFiles{T} <: AbstractVector{T}
-    parent::Vector{<:AbstractInputFile{T}}
-end
-InputFiles{T}() where T = InputFiles{T}(Vector{AbstractInputFile{T}}(undef, 0))
+# struct InputFiles{SimType} <: AbstractVector{AbstractInputFile} 
+#     InputFiles{Deterministic}() = Vector{DeterministicInput}(undef, 0)
+#     InputFiles{Ensemble}() = Vector{EnsembleInput}(undef, 0)
+# end
+
 
 """
     $(TYPEDSIGNATURES)
 
-Create a InputFiles Vector object from reading the files in the `path` directory.
+Create a Vector of `AbstractInputFile` from reading the files in the `path` directory.
 The files are expected to have the standard output format from `flex_extract`: <prefix>YYMMDDHH.N<ENSEMBLE_MEMBER>.
 See [this link](https://www.flexpart.eu/flex_extract/Documentation/output.html) for more information.
 """
-function InputFiles{T}(path::String) where T
+function InputFiles(T::Type{<:SimType}, path::String)
     files = readdir(path, join=true)
-    # reg = T == Deterministic ? ENSEMBLE_FILE_REG : ENSEMBLE_FILE_REG
-    inputfiles = InputFiles{T}()
-    for file in files
-        toadd = T == Deterministic ? DeterministicInput(file) : EnsembleInput(file)
-        push!(inputfiles, toadd)
+    if isempty(files) 
+        InputFiles(T)
+    else
+        to_inputs(T, files)
     end
-    inputfiles
 end
-# getfiles(in::InputFiles) = in.files
-Base.parent(infiles::InputFiles) = infiles.parent
-# Base.show(io::IO, mime::MIME"text/plain", infiles::InputFiles) = show(io, mime, parent(infiles))
-Base.size(infiles::InputFiles) = size(parent(infiles))
-# Base.similar(infiles::InputFiles, T::SimType, dims) = similar(parent(infiles), T, dims)
-# Base.similar(::InputFiles, T::SimType, dims) = InputFiles{T}(Vector{AbstractInputFile{T}}(undef, dims...))
-Base.similar(infiles::InputFiles, T::SimType, dims) = InputFiles{T}(similar(parent(infiles), AbstractInputFile{T}, dims))
-Base.getindex(infiles::InputFiles, i::Int) = getindex(parent(infiles), i)
-Base.setindex!(infiles::InputFiles, v, i::Int) = setindex!(parent(infiles), v, i)
-Base.push!(infiles::InputFiles{Deterministic}, fields::Tuple) = push!(parent(infiles), DeterministicInput(fields...))
-Base.push!(infiles::InputFiles{Ensemble}, fields::Tuple) = push!(parent(infiles), EnsembleInput(fields...))
-Base.push!(infiles::InputFiles{T}, infile::AbstractInputFile{T}) where T = push!(parent(infiles), infile)
+InputFiles(path::String) = InputFiles(Deterministic, path)
+InputFiles(::Type{Deterministic}) = Vector{DeterministicInput}(undef, 0)
+InputFiles(::Type{Ensemble}) = Vector{Ensemble}(undef, 0)
+
+to_inputs(::Type{Deterministic}, files) = DeterministicInput.(files)
+to_inputs(::Type{Ensemble}, files) = EnsembleInput.(files)
 
 # TODO: Available struct is not really usefull, could be avoid, using always the same header
-struct Available{T} <: AbstractVector{T}
+struct Available{T} <: AbstractVector{AbstractInputFile{T}}
     header::String
     path::String
-    parent::InputFiles{T}
+    parent::Vector{<:AbstractInputFile{T}}
 end
-Available(inputfiles::InputFiles{T}, path) where T = Available{T}(
+Available(inputfiles::Vector{<:AbstractInputFile{T}}, path) where T = Available{T}(
     """XXXXXX EMPTY LINES XXXXXXXXX
     XXXXXX EMPTY LINES XXXXXXXX
     YYYYMMDD HHMMSS   name of the file(up to 80 characters)""",
     path,
     inputfiles
     )
-Available(inputs::Vector{<:AbstractInputFile{T}}, path) where T = Available(InputFiles{T}(inputs), path)
-Available{T}(path) where T = Available{T}(InputFiles{T}(), path)
+# Available(inputs::Vector{<:AbstractInputFile{T}}, path) where T = Available(InputFiles(T, inputs), path)
+Available{T}(path) where T = Available{T}(InputFiles(T), path)
 function Available{T}(avpath::String, inpath::String; fromdir = true) where T
     fromdir ? _available_from_dir(avpath, inpath, T) : _available_from_file(avpath, inpath, T)
 end
@@ -132,15 +125,15 @@ Base.similar(av::Available) = similar(parent(av))
 Base.getindex(av::Available, i::Int) = getindex(parent(av), i)
 Base.setindex!(av::Available, v, i::Int) = setindex!(parent(av), v, i)
 
-_available_from_dir(avpath::String, inpath::String, T::SimType) = Available(InputFiles{T}(inpath), avpath)
+_available_from_dir(avpath::String, inpath::String, T::Type{<:SimType}) = Available(InputFiles(T, inpath), avpath)
 
 
-function _available_from_file(avpath::String, inpath::String, T::SimType)
+function _available_from_file(avpath::String, inpath::String, T::Type{<:SimType})
     lines = readlines(avpath)
     header, ioc = _header(lines)
     filelines = isnothing(ioc) ? lines : lines[ioc+1:end]
     filelines = filter(x -> x !== "", filelines)
-    inputfiles = InputFiles{T}()
+    inputfiles = InputFiles(T)
 
     for l in filelines
         sl = split(l)
@@ -151,7 +144,7 @@ function _available_from_file(avpath::String, inpath::String, T::SimType)
         push!(inputfiles, toadd)
     end
 
-    Available(header, avpath, inputfiles)
+    Available{T}(header, avpath, inputfiles)
 end
 
 function _header(lines)
@@ -159,21 +152,6 @@ function _header(lines)
     headerlines = isnothing(ioc) ? [] : lines[1:ioc[1]]
     return join(headerlines, "\n"), ioc
 end
-
-# """
-#     $(TYPEDSIGNATURES)
-
-# Create a FlexpartInput object from reading the `available` file specified by `fpdir`.
-# """
-# readav(fpdir::FlexpartDir)::FlexpartInput = FlexpartInput(fpdir, Available(fpdir))
-
-# function Flexpart.save(fpinput::FlexpartInput)
-#     av = available(fpinput)
-#     fpdir = getfpdir(fpinput)
-#     dest = fpdir[:available]
-
-#     Flexpart.save(av, dest)
-# end
 
 function Flexpart.save(av::Available)
     (tmppath, tmpio) = mktemp()
