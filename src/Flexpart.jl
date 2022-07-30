@@ -7,6 +7,7 @@ using Dates
 using DataStructures: OrderedDict
 using DocStringExtensions
 using FLEXPART_jll
+using Parameters
 # using Debugger
 # using PyPlot
 
@@ -75,6 +76,7 @@ function getpath end
 
 include("abstracts.jl")
 include("flexpartdir.jl")
+include("default_parameters.jl")
 include("readgrib.jl")
 include("utils.jl")
 include("FlexpartInputs.jl")

@@ -12,15 +12,17 @@ EcmwfRequests = "c0c4b1a4-92fd-414d-990e-850c1287bada"
 FLEXPART_jll = "f469b0c9-c763-5b61-b20e-7fa8370129c5"
 FlexExtract_jll = "928114cd-b949-50c5-8a7b-63c9d706fec3"
 GRIB = "b16dfd50-4035-11e9-28d4-9dfe17e6779b"
+Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+Rasters = "a3a2b9e3-a471-40c9-b274-f788e487c689"
 
 [compat]
-DocStringExtensions = "0.9"
-DataStructures = "0.18"
 CSV = "0.10"
-PyCall = "1"
+DataStructures = "0.18"
+DocStringExtensions = "0.9"
 GRIB = "0.3"
+PyCall = "1"
 julia = "1"
 
 [extras]
