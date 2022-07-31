@@ -16,11 +16,12 @@ Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 
 [compat]
-DocStringExtensions = "0.9"
-DataStructures = "0.18"
 CSV = "0.10"
-PyCall = "1"
+DataStructures = "0.18"
+DocStringExtensions = "0.9"
+EcmwfRequests = "0.1"
 GRIB = "0.3"
+PyCall = "1"
 julia = "1"
 
 [extras]
