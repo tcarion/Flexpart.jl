@@ -13,7 +13,7 @@ export
 
 const FLEXEXTRACT_OUTPUT_REG = r"^([A-Z]*)(\d{8,10})(\.N(\d{3}))?"
 
-abstract type AbstractInputFile{SimType} end
+abstract type AbstractInputFile{T<:SimType} end
 
 # abstract type AbstractFlexpartInput{SimType} end
 
