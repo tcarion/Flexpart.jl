@@ -1,5 +1,5 @@
 using Flexpart.FlexExtract
-using EcmwfRequests
+using EcRequests
 using Test
 
 DEFAULT_FIRST_KEY = :START_DATE
@@ -37,12 +37,12 @@ end
     @test isfile(csvpath(fedir))
 end
 
-@testset "Convert CSV to EcmwfRequest, handle EcmwfRequest" begin
+@testset "Convert CSV to EcRequest, handle EcRequest" begin
     requests = FlexExtract.ferequests(csvpath(fedir))
     firstreq = requests[1]
     @test firstreq["stream"] == "OPER"
     firstreq["class"] = "ERA"
-    newf = EcmwfRequests.writereq(joinpath(fedir.path, "req.yaml"), firstreq)
+    newf = EcRequests.writereq(joinpath(fedir.path, "req.yaml"), firstreq)
     @test isfile(newf)
 end
 

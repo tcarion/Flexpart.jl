@@ -6,8 +6,8 @@ using Dates
 using FlexExtract_jll
 using Pkg.Artifacts
 using PyCall
-import EcmwfRequests
-using EcmwfRequests: EcmwfRequestType
+import EcRequests
+using EcRequests: EcRequestType
 
 import ..Flexpart: AbstractPathnames, AbstractFlexDir, write, writelines, outer_vals, getpathnames
 export 
@@ -156,8 +156,8 @@ function save_request(fedir::FlexExtractDir)
     cp(csvp, joinpath(fedir.path, basename(csvp)))
 end
 
-function EcmwfRequests.EcmwfRequest(row::CSV.Row)
-    d = EcmwfRequestType()
+function EcRequests.EcRequest(row::CSV.Row)
+    d = EcRequestType()
     for name in propertynames(row)
         valuestr = row[name] |> string |> strip
         valuestr |> isempty && continue
@@ -170,7 +170,7 @@ function EcmwfRequests.EcmwfRequest(row::CSV.Row)
     d
     # MarsRequest(d, parse(Int64, pop!(d, :request_number)))
 end
-allrequests(csv::CSV.File) = EcmwfRequests.EcmwfRequest.(collect(csv))
+allrequests(csv::CSV.File) = EcRequests.EcRequest.(collect(csv))
 ferequests(path::String) = allrequests(CSV.File(path, normalizenames= true))
 # MarsRequest(dict::AbstractDict) = MarsRequest(convert(OrderedDict, dict), 1)
 
@@ -218,7 +218,7 @@ function submit(f::Function, fedir::FlexExtractDir)
 end
 
 function retrieve(request; polytope = false)
-    !polytope ? EcmwfRequests.runmars(request) : EcmwfRequests.runpolytope(request)
+    !polytope ? EcRequests.runmars(request) : EcRequests.runpolytope(request)
 end
 
 function retrieve(requests::AbstractVector; polytope = false)
