@@ -1,7 +1,6 @@
 using Flexpart
-import Flexpart: Parameters
 using Test
 
 @testset "Parameters" begin
-    p = Parameters()
+    p = Flexpart.Parameters()
 end
