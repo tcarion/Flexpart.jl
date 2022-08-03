@@ -4,3 +4,4 @@
 /test/fp_dir_test/*
 /docs/build
 /deps/build.log
+test/Manifest.toml

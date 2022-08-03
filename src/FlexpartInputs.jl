@@ -58,6 +58,7 @@ EnsembleInput(path::String) = _input_helper(path, Ensemble)
 getpath(input::AbstractInputFile) = joinpath(input.dirpath, input.filename)
 Flexpart.grib_area(input::AbstractInputFile) = Flexpart.grib_area(getpath(input))
 Flexpart.grib_resolution(input::AbstractInputFile) = Flexpart.grib_resolution(getpath(input))
+Base.convert(::Type{String}, in::AbstractInputFile) = getpath(in)
 
 function _input_helper(path::String, T)
     filename = basename(path)
