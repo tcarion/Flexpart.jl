@@ -1,4 +1,4 @@
-@with_kw struct Release
+Base.@kwdef struct Release
     # Species numbers in directory SPECIES
     specnum_rel::Int = 21
     # Release start datetime
@@ -27,6 +27,63 @@
     comment::String = "RELEASE 1"
 end
 
+Base.@kwdef struct Command
+    # Simulation direction in time   ; 1 (forward) or -1 (backward)
+    ldirect::Int = 1
+    # Simulation start datetime
+    sim_start::DateTime = DateTime(2021, 9, 5, 0, 0, 0)
+    # Simulation stop datetime
+    sim_stop::DateTime = DateTime(2021, 9, 5, 2, 0, 0)
+    # Interval of model output; average concentrations calculated every LOUTSTEP (s)  
+    loutstep::Int = 3600
+    # Interval of output averaging (s)
+    loutaver::Int = 3600
+    # Interval of output sampling  (s), higher stat. accuracy with shorter intervals
+    loutsample::Int = 900
+    # Interval of particle splitting (s)
+    itsplit::Int = 0
+    # All processes are synchronized to this time interval (s)
+    lsynctime::Int = 900
+    # CTL>1, ABL time step = (Lagrangian timescale (TL))/CTL, uses LSYNCTIME if CTL<0
+    ctl::Float64 = -5.
+    # Reduction for time step in vertical transport, used only if CTL>1 
+    ifine::Int = 4
+    # Output type: :mass, :pptv, :plume
+    iout::Vector{Symbol} = [:mass]
+    # Particles position output: 0]no 1]every output 2]only at end 3]time averaged
+    ipout::Int = 0
+    # Increase of ABL heights due to sub-grid scale orographic variations
+    lsubgrid::Bool = false
+    # Convection parameterization
+    lconvection::Bool = false
+    # Calculation of age spectra
+    lagespectra::Bool = false
+    # Warm start from particle dump (needs previous partposit_end file)
+    ipin::Bool = false
+    # Separate output fields for each location in the RELEASE file
+    ioutputforeachrelease::Bool = true
+    # Output of mass fluxes through output grid box boundaries
+    iflux::Bool = false
+    # Switch for domain-filling, if limited-area particles generated at boundary
+    mdomainfill::Bool = false
+    # Unit to be used at the source   ;  [1]mass 2]mass mixing ratio 
+    ind_source::Int = 1
+    # Unit to be used at the receptor; [1]mass 2]mass mixing ratio 3]wet depo. 4]dry depo.
+    ind_receptor::Int = 1
+    # Quasi-Lagrangian mode to track individual numbered particles
+    mquasilag::Bool = false
+    # Output also for a nested domain 
+    nested_output::Bool = false
+    # Output sensitivity to initial conditions (bkw mode only) [0]off 1]conc 2]mmr 
+    linit_cond::Int = 0
+    # Output only for the lowest model layer, used w/ LINIT_COND=1 or 2
+    surf_only::Bool = false
+    # Skewed, not Gaussian turbulence in the convective ABL, need large CTL and IFINE
+    cblflag::Bool = false
+    # Default path for OH file
+    ohfields_path::String = ""
+end
+
 """
     P = Parameters(kwargs...)
 
@@ -34,7 +91,7 @@ A struct to hold all model parameters that may be changed by the user.
 The struct uses keywords such that default values can be changed at creation.
 The default values of the keywords define the default model setup.
 """
-@with_kw struct Parameters
+Base.@kwdef struct Parameters
     sim_type::Type{<:SimType}=Deterministic
     # PHYSICAL CONSTANTS
     radius_earth::Real=6.371e6          # radius of Earth [m]
@@ -43,12 +100,13 @@ The default values of the keywords define the default model setup.
     akap::Real=2/7              # ratio of gas constant to specific heat of dry air
                                 # at constant pressure = 1 - 1/γ where γ is the
                                 # heat capacity ratio of a perfect diatomic gas (7/5)
-    cp::Real=1004               # specific heat at constant pressure [J/K/kg]
+    cp::Real=1004.5             # specific heat at constant pressure [J/K/kg]
     R_gas::Real=akap*cp         # specific gas constant for dry air [J/kg/K]
     alhc::Real=2501             # latent heat of condensation [J/g] for consistency with
                                 # specific humidity [g/Kg]
     alhs::Real=2801             # latent heat of sublimation [?]
     sbc::Real=5.67e-8           # stefan-Boltzmann constant [W/m^2/K^4]
+    karman::Real=0.4            # Von Karman constant
 
     # STANDARD ATMOSPHERE
     lapse_rate::Real=6          # reference temperature lapse rate -dT/dz [K/km]
@@ -69,7 +127,7 @@ The default values of the keywords define the default model setup.
     # OUTPUT
     verbose::Bool=true              # print dialog for feedback
     output::Bool=false              # Store data in netCDF?
-    output_dt::Real=6               # output time step [hours]
+    output_dt::Real=3600            # output time step [s]
     output_startdate::DateTime=DateTime(2000,1,1)
     out_path::String=pwd()          # path to output folder
     output_vars::Vector{String}=["u","v","temp","humid","pres"]
@@ -78,7 +136,7 @@ The default values of the keywords define the default model setup.
 
     # OPTIONS
     releases::Vector{Release} = [Release()]
-
+    command::Command = Command()
     # RESTART
     write_restart::Bool=true        # also write restart file if output==true?
     restart_path::String=out_path   # path for restart file

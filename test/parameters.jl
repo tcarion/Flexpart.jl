@@ -1,6 +1,8 @@
 using Flexpart
+import Flexpart: Parameters, Constants
 using Test
 
 @testset "Parameters" begin
-    p = Flexpart.Parameters()
+    p = Parameters()
+    c = Constants(p)
 end

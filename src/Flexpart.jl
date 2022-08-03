@@ -77,7 +77,6 @@ function getpath end
 
 include("abstracts.jl")
 include("flexpartdir.jl")
-include("default_parameters.jl")
 include("readgrib.jl")
 include("utils.jl")
 include("FlexpartInputs.jl")
@@ -86,6 +85,8 @@ include("outputs.jl")
 include("FlexExtract.jl")
 include("run.jl")
 
+include("default_parameters.jl")
+include("constants.jl")
 include("meteo_calc.jl")
 include("readinput.jl")
 include("release.jl")
