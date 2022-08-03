@@ -90,6 +90,8 @@ end
 A struct to hold all model parameters that may be changed by the user.
 The struct uses keywords such that default values can be changed at creation.
 The default values of the keywords define the default model setup.
+
+$(TYPEDFIELDS)
 """
 Base.@kwdef struct Parameters
     sim_type::Type{<:SimType}=Deterministic
