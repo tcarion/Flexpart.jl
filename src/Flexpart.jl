@@ -7,7 +7,8 @@ using Dates
 using DataStructures: OrderedDict
 using DocStringExtensions
 using FLEXPART_jll
-using Parameters
+
+import Parameters: @with_kw, @unpack
 # using Debugger
 # using PyPlot
 
@@ -85,9 +86,11 @@ include("outputs.jl")
 include("FlexExtract.jl")
 include("run.jl")
 
+include("meteo_calc.jl")
 include("readinput.jl")
 include("release.jl")
 include("particles.jl")
+include("input_transform.jl")
 
 using .FlexpartInputs
 using .FlexpartOptions

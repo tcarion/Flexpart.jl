@@ -35,7 +35,7 @@ The struct uses keywords such that default values can be changed at creation.
 The default values of the keywords define the default model setup.
 """
 @with_kw struct Parameters
-    sim_type::SimType=Deterministic
+    sim_type::Type{<:SimType}=Deterministic
     # PHYSICAL CONSTANTS
     radius_earth::Real=6.371e6          # radius of Earth [m]
     rotation_earth::Real=7.29e-5        # angular frequency of Earth's rotation [rad/s]
