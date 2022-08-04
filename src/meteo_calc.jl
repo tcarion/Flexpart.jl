@@ -44,6 +44,13 @@ virtual_temp(ps, t, e) = t / (1 - 0.378 * e / ps )
 """
     $(TYPEDSIGNATURES)
 
+Calculate the virtual temperature from the temperature `t` [K] and the specific humidity `w` [kg/kg].
+"""
+virtual_temp(t, w) = t * (1 + 0.608 * w )
+
+"""
+    $(TYPEDSIGNATURES)
+
 Calculate the potential temperature.
 
 # Arguments                                           
@@ -81,3 +88,17 @@ function friction_velocity(p, t, td, stress, R_gas)
     rho_moist = p / (R_gas * tv)
     sqrt(abs(stress) / rho_moist)
 end
+
+"""
+    $(TYPEDSIGNATURES)
+
+Get height from pressure level in a hydrostatic atmosphere.
+"""
+height_hs(p, ps, R_gas, T, g) = -R_gas * T / g * log(p/ps)
+
+"""
+    $(TYPEDSIGNATURES)
+
+Get height from pressure level in the international standard atmosphere.
+"""
+height_isa(p, R_gas, g) = height_hs(p, 101325, R_gas, 288, g)

@@ -1,9 +1,9 @@
 using Flexpart.FlexpartInputs
-import Flexpart.FlexpartInputs: getpath
 using Rasters
+const DD = Rasters.DimensionalData
 
 function read_input(input::AbstractInputFile)
-    inpath = getpath(input)
+    inpath = convert(String, input)
     nc_dirname = inpath*"_ncf"
     ncf_dir = mkpath(nc_dirname)
     ncf_files = get_ncfiles(nc_dirname)
@@ -14,20 +14,59 @@ function read_input(input::AbstractInputFile)
     end
     fnames = getindex.(splitext.(ncf_files), 1) .|> basename
     layer_names = getindex.(split.(fnames, input.filename), 2)
-    Dict(Symbol(layer) => RasterStack(ncf) for (layer, ncf) in zip(layer_names, ncf_files))
+    
+    # NamedTuple would be better, but it seems that in that case,
+    # the layers get loaded into memory.
+    # set = Set(create_raster(ncf)[Ti(1)] for ncf in ncf_files)
+    # merge(set...)
+
+    nt = NamedTuple(Symbol(layer) => create_raster(ncf) |> _reorder for (layer, ncf) in zip(layer_names, ncf_files))
+
+    # rpairs = map(zip(layer_names, ncf_files)) do (layer, ncf)
+    #     stack = RasterStack(ncf)
+    #     stack = reorder(stack,
+    #         X => DD.ForwardOrdered, 
+    #         Y => DD.ForwardOrdered,
+    #     )
+
+    #     if hasdim(stack, :Z)
+    #         stack = reorder(stack, Z => DD.ReverseOrdered)
+    #     end
+
+    #     Symbol(layer) => stack
+    # end
+    # for (layer, ncf) in zip(layer_names, ncf_files)
+    #     stack = RasterStack(ncf)
+    #     stack = reorder(stack,
+    #         X => DD.ForwardOrdered, 
+    #         Y => DD.ForwardOrdered,
+    #     )
+
+    #     if hasdim(stack, :Z)
+    #         stack = reorder(stack, Z => DD.ReverseOrdered)
+    #     end
+
+    #     push!(d, Symbol(layer) => stack)
+    # end
+    # Dict(rpairs)
 end
 
-function Rasters.RasterSeries(input::AbstractInputFile)
-    inpath = getpath(input)
-    ncf_dir = mkpath(inpath*"_ncf")
-    gribs = copy_grib(inpath, ncf_dir)
-    ncfs = to_netcdf(gribs, ncf_dir)
-    rm.(gribs)
-    fnames = getindex.(splitext.(ncfs), 1) .|> basename
-    layer_types = getindex.(split.(fnames, input.filename), 2)
-    layer_dims = [Dim{Symbol(layer)}() for layer in layer_types]
-    Rasters.RasterSeries(ncfs, layer_dims)
-end
+"""
+Create the RasterStack.
+"""
+create_raster(ncf) = RasterStack(ncf)
+
+# function Rasters.RasterSeries(input::AbstractInputFile)
+#     inpath = convert(String, input)
+#     ncf_dir = mkpath(inpath*"_ncf")
+#     gribs = copy_grib(inpath, ncf_dir)
+#     ncfs = to_netcdf(gribs, ncf_dir)
+#     rm.(gribs)
+#     fnames = getindex.(splitext.(ncfs), 1) .|> basename
+#     layer_types = getindex.(split.(fnames, input.filename), 2)
+#     layer_dims = [Dim{Symbol(layer)}() for layer in layer_types]
+#     Rasters.RasterSeries(ncfs, layer_dims)
+# end
 
 
 function copy_grib(fpath, dest)
@@ -49,8 +88,19 @@ end
 
 get_ncfiles(dirpath) = filter(x -> splitext(x)[2] == ".nc", readdir(dirpath, join = true))
 
-function dict_layers(rasters)
-    lt = keys(rasters)
+"""
+Reorder the dimensions. Note: this will load the stack into memory 
+It is considered more intuitive to have the last level at the first Z index (as the last level is bottom most level)
+"""
+function _reorder(stack)
+    stack = reorder(stack,
+        X => DD.ForwardOrdered, 
+        Y => DD.ForwardOrdered,
+    )
 
-    Dict(k => collect(keys(rasters[k])) for k in lt)
+    if hasdim(stack, :Z)
+        stack = reorder(stack, Z => DD.ReverseOrdered)
+    end
+
+    stack
 end
