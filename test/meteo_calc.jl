@@ -2,7 +2,7 @@ import Flexpart: saturation_pressure, virtual_temp, friction_velocity, potential
 import Flexpart: Parameters
 using Test
 
-@testset "fluid properties" begin
+@testset "scalar atmosphere properties" begin
     cp = 1004.5
     R_gas = 287.05
     ew = saturation_pressure(273.15 + 50.) * 1e-3

@@ -1,51 +1,63 @@
 using Flexpart
 using Flexpart.FlexpartInputs
-import Flexpart: EcInputMeta, EcInput, InputGeometry, Inputs, get_ustar, get_stress
+import Flexpart: EcInputMeta, EcInput, InputGeometry, Input, Inputs, InputVariables, ProcessedVariables
+import Flexpart: vertical_profiles, get_ustar, get_stress, load_layer, pressure_levels, horizontal_height, conversion_factor, _init_var_lev
 import Flexpart: calc_Δz
-import Flexpart: Parameters
+import Flexpart: Parameters, Constants, @unpack
 using Test
 inpath = "/home/tcarion/Documents/Flexpart/dev/flexpart_src/src/fpdir/input/ENH21090500"
+inpath2 = "/home/tcarion/rocourt/EH20010100"
 
-inputs_path = filter(isfile, readdir("/home/tcarion/Documents/Flexpart/dev/flexpart_src/src/fpdir/input", join = true))
+inputs_path = filter(isfile, readdir("/home/tcarion/.julia/dev/Flexpart/tmp", join = true))
 P = Parameters(inputs = inputs_path)
+C = Constants(P)
 
-inputs = DeterministicInput.(filter(isfile, inputs_path))
+finputs = DeterministicInput.(filter(isfile, inputs_path))
+finput = finputs[1]
+finput = DeterministicInput(inpath2)
+layers = Flexpart.read_input(finput)
+ec_input = EcInput(finput)
 
-input = inputs[1]
-layers = Flexpart.read_input(input)
-ec_input = EcInput(input)
+vertical = EcInputMeta(finput)
+@test vertical.(1, 101325., border = true) == 101325.
+@test vertical.(2, 101325.) ≈ 101204.94 atol = 1e-2
+
+invars = InputVariables(ec_input);
+
+heights = vertical_profiles(invars, vertical, C)
+
+plevs = pressure_levels(ec_input, invars[:sp])
+
+geom = InputGeometry(ec_input, invars, C)
+
+input = Input(finput, C)
+
+procvars = ProcessedVariables(ec_input, invars, geom, C)
+procvars = input.procvars
+@unpack h_levs, h_w = procvars
+
+
+# e = saturation_pressure.(variables.d2m[:,:,1])
+# tv1 = virtual_temp.(variables.sp, variables.t2m, e)
+# tv2 = virtual_temp.(variables.t[:,:,5], variables.w[:,:,5])
+# contourf(geom.lond, geom.latd, permutedims(tv1 - tv2))
+
+# plotvar!(v, kws...) = plot!(v / sum(v) * length(v), heights, marker = :dot, ylim = [0, 13e3], kws...)
+# plot()
+# plotvar!(variables.w[1,1,:])
+# plotvar!(variables.t[1,1,:])
+# plotvar!(variables.u[1,1,:])
+# plotvar!(variables.v[1,1,:])
 # @benchmark EcInput(input)
 
-layers = ec_input.layers
-hybrid = layers[:hybrid]
-surface = layers[:surface]
-allrast = merge(surface, hybrid)
-
-ecmeta = EcInputMeta(input)
-
-@test ecmeta.(1, 101325., border = true) == 101325.
-@test ecmeta.(2, 101325.) ≈ 101204.94 atol = 1e-2
 
 # scatter(fill(1, 138), ecmeta.(1:138, 101325), marker=:dot, markersize=1)
 # scatter!(fill(1, 138), ecmeta.(1:138, 101325, border=true), marker=:dot, markersize=1)
-
-geom = InputGeometry(ec_input)
 
 # stress = get_stress(layers)
 # ustar = get_ustar(layers, stress)
 
 # ustar[:,:,1]
-
-I = Inputs(P)
-I.current.left = EcInput(inputs[3]);
-
-@testset "Read input" begin
-    FlexpartDir() do fpdir
-        default_run(fpdir)
-        outputs = OutputFiles(fpdir)
-        @test outputs[1].type == "binary"
-    end
-end
 
 # t = ec_input[:t]
 # t2 = ec_input[:t2m]
