@@ -7,15 +7,16 @@ import Flexpart: Parameters, Constants, @unpack
 using Test
 inpath = "/home/tcarion/Documents/Flexpart/dev/flexpart_src/src/fpdir/input/ENH21090500"
 inpath2 = "/home/tcarion/rocourt/EH20010100"
+inspath = "/home/tcarion/Documents/Flexpart/dev/flexpart_src/src/fpdir/input/"
 
-inputs_path = filter(isfile, readdir("/home/tcarion/.julia/dev/Flexpart/tmp", join = true))
+inputs_path = filter(isfile, readdir(inspath, join = true))
 P = Parameters(inputs = inputs_path)
 C = Constants(P)
 
 finputs = DeterministicInput.(filter(isfile, inputs_path))
 finput = finputs[1]
-finput = DeterministicInput(inpath2)
-layers = Flexpart.read_input(finput)
+# finput = DeterministicInput(inpath2)
+# layers = Flexpart.read_input(finput)
 ec_input = EcInput(finput)
 
 vertical = EcInputMeta(finput)

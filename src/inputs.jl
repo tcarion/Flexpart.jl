@@ -223,7 +223,7 @@ function ProcessedVariables(
 
     h_refs = geom.heights_ref
 
-    uu, vv, tt, qvv = _init_var_lev.((u,v,t,qv))
+    uu, vv, tt, qvv, ww = _init_var_lev.((u,v,t,qv, etadot))
     
     idx = fill(2, (nlon, nlat))
     for k in 2:nlev-1
@@ -253,9 +253,9 @@ function ProcessedVariables(
                 dz2 = h_levs[i,j,kz] - h_ref
     
                 Δz = dz1 + dz2
-                uu[i,j,k] = (u[i,j,k-1] * dz2 + u[i,j,k] * dz1) / Δz
-                vv[i,j,k] = (v[i,j,k-1] * dz2 + v[i,j,k] * dz1) / Δz
-                tt[i,j,k] = (t[i,j,k-1] * dz2 + t[i,j,k] * dz1) / Δz
+                uu[i,j,k] = (u[i,j,kz-1] * dz2 + u[i,j,kz] * dz1) / Δz
+                vv[i,j,k] = (v[i,j,kz-1] * dz2 + v[i,j,kz] * dz1) / Δz
+                tt[i,j,k] = (t[i,j,kz-1] * dz2 + t[i,j,kz] * dz1) / Δz
                 qvv[i,j,k] = (qv[i,j,k-1] * dz2 + qv[i,j,k] * dz1) / Δz
             end
         end
@@ -266,15 +266,16 @@ function ProcessedVariables(
     # ww = fac_conv .* etadot
 
     # FIXME: Gives weird results with this multiplication factor  
-    ww = Base.copy(etadot)
-
+    # ww = Base.copy(etadot)
+    ww[:,:,1] = etadot[:,:,1] .* fac_conv[:,:,1]
+    ww[:,:,end] = etadot[:,:,end] .* fac_conv[:,:,end]
     idx = fill(2, (nlon, nlat))
     for k in 2:nlev
         h_ref = h_refs[k]
         for I in CartesianIndices(ww[:,:,k])
             i, j = Tuple(I)
             for kz in idx[I]:nlev
-                if idx[I] <= kz && (h_levs[i,j,kz-1] < h_ref <= h_levs[i,j,kz])
+                if idx[I] <= kz && (h_w[i,j,kz-1] < h_ref <= h_w[i,j,kz])
                     idx[I] = kz
                     continue
                 end
@@ -283,17 +284,19 @@ function ProcessedVariables(
 
         for I in CartesianIndices(ww[:,:,k])
             i, j = Tuple(I)
-            if h_ref <= h_levs[i, j, end]
+            # if h_ref <= h_levs[i, j, end]
                 kz = idx[I]
-                dz1 = h_ref - h_levs[i,j,kz-1]
-                dz2 = h_levs[i,j,kz] - h_ref
+                dz1 = h_ref - h_w[i,j,kz-1]
+                dz2 = h_w[i,j,kz] - h_ref
     
                 Δz = dz1 + dz2
-                ww[i,j,k] = (etadot[i,j,k-1] * dz2 + etadot[i,j,k] * dz1) / Δz
-            end
+                ww[i,j,k] = (etadot[i,j,kz-1] * fac_conv[i,j,kz-1] * dz2 
+                    + etadot[i,j,kz] * fac_conv[i,j,kz] * dz1) / Δz
+            # end
         end
     end
 
+    # ww = ww .* fac_conv
     cosf = 1 ./ cosd.(geom.latd)
 
     idx = fill(2, (nlon, nlat))
@@ -331,7 +334,7 @@ function ProcessedVariables(
             ww[i,j,k] += ( dzdx * uu[i,j,k] *  dxconst * cosf[j] + dzdy * vv[i,j,k] * dyconst ) 
         end
     end
-    ProcessedVariables(p_levs, h_levs, h_levs, uu, vv, tt, qvv, ww)
+    ProcessedVariables(p_levs, h_levs, h_w, uu, vv, tt, qvv, ww)
 end
 
 function _init_var_lev(from)
