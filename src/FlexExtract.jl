@@ -251,6 +251,7 @@ end
 function preparecmd(fedir::FlexExtractDir)
     files = readdir(fedir[:input])
     ifile = findfirst(files) do x
+        splitext(x)[2] !== ".grb" && return false
         try
             split(x, '.')[4]
         catch
@@ -258,6 +259,7 @@ function preparecmd(fedir::FlexExtractDir)
         end
         true
     end
+    isnothing(ifile) && error("No ECMWF file found in the input directory")
     ppid = split(files[ifile], '.')[4]
     `$(PYTHON_EXECUTABLE) $(PATH_PYTHON_SCRIPTS[:prepare]) $(feparams(fedir)) $(["--ppid", ppid])`
 end
@@ -299,14 +301,16 @@ feparams(fedir::FlexExtractDir) = feparams(fedir[:controlfile], fedir[:input], f
 csvpath(fedir::FlexExtractDir) = joinpath(fedir[:input], "mars_requests.csv")
 
 function control2dict(filepath) :: OrderedDict{Symbol, Any}
+    pairs = []
     open(filepath, "r") do f
-        OrderedDict{Symbol, Any}(
-            map(eachline(f)) do line
-                m = match(r"(.*?)\s(.*)", line)
-                m.captures[1] |> Symbol => m.captures[2]
-            end
-        )
+        for line in eachline(f)
+            line == "" && continue
+            m = match(r"(.*?)\s(.*)", line)
+            isnothing(m) && error("line $line could not be parsed")
+            push!(pairs, m.captures[1] |> Symbol => m.captures[2])
+        end
     end
+    OrderedDict{Symbol, Any}(pairs)
 end
 
 function save(fcontrol::FeControl)
