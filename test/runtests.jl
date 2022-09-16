@@ -1,6 +1,5 @@
 using Flexpart
 using Test
-using Dates
 
 @testset "input" begin include("input.jl") end
 @testset "options" begin include("options.jl") end

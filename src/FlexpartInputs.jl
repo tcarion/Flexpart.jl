@@ -11,7 +11,7 @@ export
     EnsembleInput,
     AbstractInputFile
 
-const FLEXEXTRACT_OUTPUT_REG = r"^([A-Z]*)(\d{8,10})(\.N(\d{3}))?"
+const FLEXEXTRACT_OUTPUT_REG = r"(?<prefix>[A-Z]*)(?<year>\d{2})(?<month>\d{2})(?<day>\d{2})((\.(?<hour2>\d{2})\.(?<step>\d{3}))|(?<hour>\d{2}))(\.N(?<member>\d{3}))?"
 
 abstract type AbstractInputFile{T<:SimType} end
 
@@ -32,7 +32,7 @@ struct DeterministicInput <: AbstractInputFile{Deterministic}
     "Absolute path of the directory"
     dirpath::String
 end
-DeterministicInput(path::String) = _input_helper(path, Deterministic)
+DeterministicInput(path::String) = _input_helper(path)
 
 """
     EnsembleInput
@@ -52,22 +52,38 @@ struct EnsembleInput <: AbstractInputFile{Ensemble}
     dirpath::String
 end
 Base.convert(::Type{DeterministicInput}, in::EnsembleInput) = DeterministicInput(in.time, in.filename, in.dirpath)
-EnsembleInput(path::String) = _input_helper(path, Ensemble)
+EnsembleInput(path::String) = _input_helper(path)
 
 getpath(input::AbstractInputFile) = joinpath(input.dirpath, input.filename)
 Flexpart.grib_area(input::AbstractInputFile) = Flexpart.grib_area(getpath(input))
 Flexpart.grib_resolution(input::AbstractInputFile) = Flexpart.grib_resolution(getpath(input))
 Base.convert(::Type{String}, in::AbstractInputFile) = getpath(in)
 
-function _input_helper(path::String, T)
+function _input_helper(path::String)
     filename = basename(path)
     dirpath = dirname(path)
     m = match(FLEXEXTRACT_OUTPUT_REG, filename)
     if !isnothing(m)
-        x = m.captures[2]
-        m_sep = parse.(Int, [x[1:2], x[3:4], x[5:6], x[7:8]])
-        formated_date = DateTime(m_sep...)
-        T == Deterministic ? DeterministicInput(dateYY.(formated_date), filename, dirpath) : EnsembleInput(dateYY.(formated_date), filename, parse(Int, m.captures[4]), dirpath)
+        valid_time = _construct_date(m)
+        if isnothing(m[:member])
+            DeterministicInput(valid_time, filename, dirpath)
+        else
+            EnsembleInput(valid_time, filename, parse(Int, m[:member]), dirpath)
+        end
+    else
+        nothing
+    end
+end
+
+function _construct_date(m)
+    dtvec = [m[:year], m[:month], m[:day]]
+    if isnothing(m[:step])
+        push!(dtvec, m[:hour])
+        dateYY(DateTime(parse.(Int, dtvec)...))
+    else
+        push!(dtvec, m[:hour2])
+        dtld = DateTime(parse.(Int, dtvec)...)
+        dateYY(dtld + Hour(parse(Int, m[:step])))
     end
 end
 # struct InputFiles{SimType} <: AbstractVector{AbstractInputFile} 
@@ -88,15 +104,15 @@ function InputFiles(T::Type{<:SimType}, path::String)
     if isempty(files) 
         InputFiles(T)
     else
-        to_inputs(T, files)
+        _input_helper.(files)
     end
 end
 InputFiles(path::String) = InputFiles(Deterministic, path)
 InputFiles(::Type{Deterministic}) = Vector{DeterministicInput}(undef, 0)
 InputFiles(::Type{Ensemble}) = Vector{Ensemble}(undef, 0)
 
-to_inputs(::Type{Deterministic}, files) = DeterministicInput.(files)
-to_inputs(::Type{Ensemble}, files) = EnsembleInput.(files)
+# to_inputs(::Type{Deterministic}, files) = DeterministicInput.(files)
+# to_inputs(::Type{Ensemble}, files) = EnsembleInput.(files)
 
 # TODO: Available struct is not really usefull, could be avoid, using always the same header
 struct Available{T} <: AbstractVector{AbstractInputFile{T}}
