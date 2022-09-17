@@ -176,7 +176,7 @@ julia> Flexpart.specie_number("CH4")
 26
 ```
 """
-function specie_number(specie::String)
+function specie_number(specie::AbstractString)
     fp_species = Flexpart.species_name()
     if !(specie in replace.(fp_species, "\"" => ""))
         error("the specie name $specie has not been found in Flexpart default species")

@@ -54,8 +54,7 @@ function _run_helper(fpdir::FlexpartDir{Deterministic}; f = nothing)
 end
 
 function _run_helper(fpdir::FlexpartDir{Ensemble})
-    av = readav(fpdir) |> available
-    inputs = av |> collect
+    inputs = InputFiles(fpdir[:input])
     members = [x.member for x in inputs] |> unique 
     sep_inputs = [filter(x -> x.member==i, inputs) for i in members]
 
@@ -63,15 +62,14 @@ function _run_helper(fpdir::FlexpartDir{Ensemble})
         imember = realization[1].member
         tempfpdir = FlexpartDir()
         memb_out_path = joinpath(fpdir[:output], "member$(imember)")
-        mkdir(memb_out_path)
+        mkpath(memb_out_path)
         tempfpdir[:options] = fpdir[:options]
         tempfpdir[:output] = memb_out_path
         tempfpdir[:input] = fpdir[:input]
 
         det_inputs = convert.(DeterministicInput, realization)
-        real_av = Available(det_inputs)
-        fpinput = FlexpartInput(tempfpdir, real_av)
-        save(fpinput)
+        real_av = Available(det_inputs, tempfpdir[:available])
+        save(real_av)
         saveabs(tempfpdir)
         
         log_path = joinpath(getpath(fpdir), "member$(imember).log")
