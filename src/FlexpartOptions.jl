@@ -171,7 +171,7 @@ end
 Return specie number needed for the RELEASES options from the name `specie`.
 
 # Examples
-```jldoctest
+```julia-repl
 julia> Flexpart.specie_number("CH4")
 26
 ```

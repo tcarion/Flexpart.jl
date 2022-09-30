@@ -29,7 +29,7 @@ end
 
 Update a release option `release` start and stop datetime given the `start` and `duration`.
 # Examples
-```jldoctest
+```julia-repl
 julia> fpoptions = FlexpartOption(FlexpartDir())
 julia> Flexpart.set_release_duration!(fpoptions["RELEASES"][:RELEASE][1], Dates.now(), Dates.Second(120))
 ```
@@ -44,7 +44,7 @@ end
 
 Update a release option `release` start and stop datetime given the `start` and `stop` DateTime.
 # Examples
-```jldoctest
+```julia-repl
 julia> fpoptions = FlexpartOption(FlexpartDir())
 julia> Flexpart.set_release_dates!(fpoptions["RELEASES"][:RELEASE][1], Dates.now(), Dates.now() + Dates.Second(120))
 ```
@@ -117,7 +117,7 @@ end
 Update the specie number in the RELEASES options from the name `specie`.
 
 # Examples
-```jldoctest
+```julia-repl
 julia> Flexpart.set_specie!(FlexpartOption(FlexpartDir()), "CH4")
 26
 ```
