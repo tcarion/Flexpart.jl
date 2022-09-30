@@ -107,6 +107,7 @@ function dummy_run(fpdir::FlexpartDir{Deterministic})
     gridres, _ = Flexpart.grib_resolution(avs[1])
     outgrid = Flexpart.area2outgrid(fpdir, gridres)
     merge!(options["OUTGRID"][:OUTGRID], outgrid)
+    options["COMMAND"][:COMMAND][1][:IOUT] = 9
     Flexpart.save(avs)
     Flexpart.save(options)
     Flexpart.run(fpdir)
