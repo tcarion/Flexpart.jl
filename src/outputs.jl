@@ -1,5 +1,7 @@
 abstract type AbstractOutputFile{SimType} end
 Base.convert(::Type{<:AbstractString}, output::AbstractOutputFile) = output.path
+Base.string(out::AbstractOutputFile) = convert(String, out)
+
 """
     DeterministicInput
 
