@@ -62,7 +62,7 @@ The default paths for the pathnames are:
     $(DEFAULT_PATHNAMES)
 
 # Examples
-```jldoctest
+```julia-repl
 julia> FlexpartDir()
 FlexpartDir{Deterministic} @ /tmp/jl_a8gDYX
 pathnames:

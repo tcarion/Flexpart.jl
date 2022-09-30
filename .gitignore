@@ -1,7 +1,6 @@
-/Manifest.toml
 /test/fe_template/*
 /test/fp_template/*
 /test/fp_dir_test/*
 /docs/build
 /deps/build.log
-test/Manifest.toml
+Manifest.toml

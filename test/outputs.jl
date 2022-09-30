@@ -7,6 +7,6 @@ using Dates
     FlexpartDir() do fpdir
         default_run(fpdir)
         outputs = OutputFiles(fpdir)
-        @test outputs[1].type == "binary"
+        @test outputs[1].type == "ncf"
     end
 end
