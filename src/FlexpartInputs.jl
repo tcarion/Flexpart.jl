@@ -141,7 +141,7 @@ Base.similar(av::Available, T::SimType, dims) = Available{T}(av.header, av.path,
 Base.similar(av::Available) = similar(parent(av))
 Base.getindex(av::Available, i::Int) = getindex(parent(av), i)
 Base.setindex!(av::Available, v, i::Int) = setindex!(parent(av), v, i)
-
+Base.filter(f, av::Available) = Available(filter(f, parent(av)), av.path)
 _available_from_dir(avpath::String, inpath::String, T::Type{<:SimType}) = Available(InputFiles(T, inpath), avpath)
 
 
