@@ -28,6 +28,7 @@ av_from_dir = Available{Deterministic}(av_default_path, FP_TESTS_DETER_INPUT, fr
 @testset "Available length and filter" begin
     @test length(av_from_file) == 24
     @test filter(x -> Dates.Hour(x.time) == Dates.Hour(0), av_from_file)[1].time == DateTime(2012,1,1,0,0,0)
+    @test filter(x -> Dates.Hour(x.time) == Dates.Hour(0), av_from_file) isa Available
 end
 
 # TODO improve this test
