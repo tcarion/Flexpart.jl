@@ -98,28 +98,34 @@ Base.iterate(fcontrol::WrappedOrderedDict) = iterate(Base.parent(fcontrol))
 Base.iterate(fcontrol::WrappedOrderedDict, state) = iterate(Base.parent(fcontrol), state)
 
 mutable struct FePathnames <: AbstractPathnames
+    dirpath::AbstractString
     input::AbstractString
     output::AbstractString
     controlfile::AbstractString
 end
-FePathnames(;control = FLEX_DEFAULT_CONTROL) = FePathnames("./input", "./output", _default_control(control))
-FePathnames(controlpath::AbstractString) = FePathnames("./input", "./output", controlpath)
+FePathnames(dirpath; control = FLEX_DEFAULT_CONTROL) = FePathnames(dirpath, "./input", "./output", _default_control(control))
+FePathnames(dirpath, controlpath::AbstractString) = FePathnames(dirpath, "./input", "./output", controlpath)
+
 
 struct FlexExtractDir <: AbstractFlexDir
     path::AbstractString
     pathnames::FePathnames
 end
-FlexExtractDir(fepath::AbstractString, controlpath::AbstractString) = FlexExtractDir(abspath(fepath), FePathnames("input", "output", relpath(controlpath, fepath)))
+FlexExtractDir(fepath::AbstractString, controlpath::AbstractString) = FlexExtractDir(abspath(fepath), FePathnames(fepath, "input", "output", relpath(controlpath, fepath)))
 
 function FlexExtractDir(fepath::AbstractString)
     files = readdir(fepath)
     icontrol = findfirst(x -> occursin("CONTROL", x), files .|> basename)
     isnothing(icontrol) && error("No control file has been found in $fepath")
-    FlexExtractDir(fepath, FePathnames("input", "output", files[icontrol]))
+    FlexExtractDir(fepath, FePathnames(fepath, "input", "output", files[icontrol]))
 end
 FlexExtractDir(fepath::AbstractString, fcontrolpath::AbstractString, inpath::AbstractString, outpath::AbstractString) =
-    FlexExtractDir(fepath, FePathnames(inpath, outpath, fcontrolpath))
-FlexExtractDir() = create(mktempdir())
+    FlexExtractDir(fepath, FePathnames(fepath, inpath, outpath, fcontrolpath))
+function FlexExtractDir()
+    dir = mktempdir()
+    return FlexExtract.create(dir)
+end
+
 getpathnames(fedir::FlexExtractDir) = fedir.pathnames
 function Base.show(io::IO, mime::MIME"text/plain", fedir::FlexExtractDir)
     println(io, "FlexExtractDir @ ", fedir.path)
@@ -128,7 +134,7 @@ end
 
 function create(path::AbstractString; force = false, control = FLEX_DEFAULT_CONTROL)
     mkpath(path)
-    default_pn = FePathnames(;control = control)
+    default_pn = FePathnames(path; control = control)
     mkpath(joinpath(path, default_pn[:input]))
     mkpath(joinpath(path, default_pn[:output]))
     fn = cp(default_pn[:controlfile], joinpath(path, basename(default_pn[:controlfile])), force = force)

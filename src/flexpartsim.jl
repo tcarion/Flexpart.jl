@@ -20,12 +20,29 @@ Object that represents the `pathnames` file. The paths are expected in the follo
     $(FIELDS)
 """
 mutable struct FpPathnames <: AbstractPathnames
+    dirpath::String
     options::String
     output::String
     input::String
     available::String
 end
-FpPathnames() = FpPathnames(DEFAULT_PATHNAMES...)
+function FpPathnames(path::AbstractString)
+    basename(path) == PATHNAMES_FILENAME || error("The name of the pathnames file should be `pathnames`")
+    FpPathnames(dirname(path), readlines(path)...)
+end
+FpPathnames() = FpPathnames(DEFAULT_PATH_PATHNAMES)
+getpath(pn::FpPathnames) = pn.dirpath
+
+function save(pn::FpPathnames)
+    open(pathnames_path(pn), "w") do f
+        for (_, v) in pn
+            Base.write(f, v*"\n")
+        end
+    end
+end
+
+pathnames_path(o) = joinpath(getpath(o), PATHNAMES_FILENAME) |> Base.abspath
+pathnames_path(path::String) = joinpath(path, PATHNAMES_FILENAME) |> Base.abspath
 
 """
     $(TYPEDEF)
@@ -39,18 +56,20 @@ The `FlexpartSim` object also indicates the type of the simulation:
 If no type parameter is provided when using `FlexpartSim` constructors, the default will be `Deterministic`.
 """
 struct FlexpartSim{SimType} <: AbstractFlexDir
-    path::String
     pathnames::FpPathnames
     simtype::SimType
 end
+getpathnames(fpsim::FlexpartSim) = fpsim.pathnames
+getpath(fpsim::FlexpartSim) = getpath(getpathnames(fpsim))
+
 
 """
     $(TYPEDSIGNATURES)
 
 Read the `pathnames` file in `path` to create a `FlexpartSim`.
 """
-FlexpartSim(path::String) = FlexpartSim(path, _fpdir_helper(path), Deterministic())
-FlexpartSim{T}(path::String) where T = FlexpartSim{T}(path, _fpdir_helper(path), T())
+FlexpartSim{T}(path::String) where T = FlexpartSim(FpPathnames(path), T())
+FlexpartSim(path::String) = FlexpartSim{Deterministic}(path)
 
 """
     $(TYPEDSIGNATURES)
@@ -74,8 +93,7 @@ pathnames:
 """
 function FlexpartSim{T}() where T
     path = mktempdir()
-    copyall(DEFAULT_FP_DIR, path)
-    FlexpartSim{T}(path)
+    return Flexpart.create(path; simtype = T)
 end
 FlexpartSim() = FlexpartSim{Deterministic}()
 
@@ -92,20 +110,16 @@ julia> FlexpartSim() do fpsim
 """
 function FlexpartSim{T}(f::Function) where T
     mktempdir() do path
-        copyall(DEFAULT_FP_DIR, path)
-        fpsim = FlexpartSim(path)
+        fpsim = Flexpart.create(path; simtype = T)
         f(fpsim)
     end
 end
 FlexpartSim(f::Function) = FlexpartSim{Deterministic}(f)
 
 function Base.show(io::IO, mime::MIME"text/plain", fpsim::FlexpartSim) 
-    println(io,"$(typeof(fpsim)) @ $(fpsim.path)")
+    println(io,"$(typeof(fpsim)) @ $(getpath(fpsim))")
     show(io, mime, getpathnames(fpsim))
 end
-getpathnames(fpsim::FlexpartSim) = fpsim.pathnames
-getpath(fpsim::FlexpartSim) = fpsim.path
-
 # Base.getindex(fpsim::FlexpartSim, name::Symbol) = getpathnames(fpsim)[name]
 # Base.getindex(fpsim::FlexpartSim, name::Symbol) = joinpath(getpath(fpsim), getpathnames(fpsim)[name]) |> Base.abspath
 # function Base.setindex!(fpsim::FlexpartSim, value::String, name::Symbol)
@@ -122,36 +136,19 @@ function copy(fpsim::FlexpartSim, path::String) :: FlexpartSim
     copyall(getpath(fpsim), path)
 end
 
-function _fpdir_helper(path::String)
-    pn_path = joinpath(path, DEFAULT_PATH_PATHNAMES)
-    isfile(pn_path) || error("No `pathnames` file has been found in the directory")
-    try
-        FpPathnames(pathnames(pn_path)...)
-    catch e
-        if isa(e, SystemError)
-            FpPathnames()
-        else
-            throw(e)
-        end
-    end
-end
-# pathnames(fpsim::FlexpartSim) = fpsim.pathnames
-
-function create(path::String)
-    newdir = mkdir(path)
-    copyall(DEFAULT_FP_DIR, newdir)
-    newfpdir = FlexpartSim{Deterministic}(newdir)
+function create(path::String; simtype = Deterministic)
+    copyall(DEFAULT_FP_DIR, path)
+    newfpdir = FlexpartSim{simtype}(pathnames_path(path))
     newfpdir
 end
 
-function pathnames(fpsim::FlexpartSim)
-    pathnames(pathnames_path(fpsim))
+function read_pathnames(fpsim::FlexpartSim)
+    read_pathnames(pathnames_path(fpsim))
 end
 
-function pathnames(path::String)
+function read_pathnames(path::String)
     readlines(path)
 end
-pathnames_path(fpsim::FlexpartSim) = joinpath(getpath(fpsim), DEFAULT_PATH_PATHNAMES) |> Base.abspath
 
 # abspath(fpsim::FlexpartSim, type::Symbol) = joinpath(getpath(fpsim), fpsim[type]) |> Base.abspath
 
@@ -161,11 +158,7 @@ pathnames_path(fpsim::FlexpartSim) = joinpath(getpath(fpsim), DEFAULT_PATH_PATHN
 Write the current `FlexpartSim` paths to the `pathnames` file.
 """
 function save(fpsim::FlexpartSim)
-    open(pathnames_path(fpsim), "w") do f
-        for (_, v) in getpathnames(fpsim)
-            Base.write(f, v*"\n")
-        end
-    end
+    save(getpathnames(fpsim))
 end
 
 """

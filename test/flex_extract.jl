@@ -1,4 +1,5 @@
 using Flexpart.FlexExtract
+using Flexpart.FlexExtract: FePathnames
 using EcRequests
 using Test
 
