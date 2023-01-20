@@ -30,7 +30,7 @@ end
 Update a release option `release` start and stop datetime given the `start` and `duration`.
 # Examples
 ```julia-repl
-julia> fpoptions = FlexpartOption(FlexpartDir())
+julia> fpoptions = FlexpartOption(FlexpartSim())
 julia> Flexpart.set_release_duration!(fpoptions["RELEASES"][:RELEASE][1], Dates.now(), Dates.Second(120))
 ```
 """
@@ -45,7 +45,7 @@ end
 Update a release option `release` start and stop datetime given the `start` and `stop` DateTime.
 # Examples
 ```julia-repl
-julia> fpoptions = FlexpartOption(FlexpartDir())
+julia> fpoptions = FlexpartOption(FlexpartSim())
 julia> Flexpart.set_release_dates!(fpoptions["RELEASES"][:RELEASE][1], Dates.now(), Dates.now() + Dates.Second(120))
 ```
 """
@@ -91,8 +91,8 @@ function area2outgrid(area::Vector{<:Real}, gridres::Real = 0.01; nested = false
     ) : res
 end
 
-function area2outgrid(fpdir::FlexpartDir, gridres::Real; nested = false)
-    firstinput = readdir(fpdir[:input], join = true)[1]
+function area2outgrid(fpsim::FlexpartSim, gridres::Real; nested = false)
+    firstinput = readdir(fpsim[:input], join = true)[1]
     area = grib_area(firstinput)
 
     area2outgrid(area, gridres; nested)
@@ -118,7 +118,7 @@ Update the specie number in the RELEASES options from the name `specie`.
 
 # Examples
 ```julia-repl
-julia> Flexpart.set_specie!(FlexpartOption(FlexpartDir()), "CH4")
+julia> Flexpart.set_specie!(FlexpartOption(FlexpartSim()), "CH4")
 26
 ```
 """

@@ -11,7 +11,7 @@ using FLEXPART_jll
 # using PyPlot
 
 export
-    FlexpartDir,
+    FlexpartSim,
     SimType,
     Deterministic,
     Ensemble,

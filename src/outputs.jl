@@ -35,7 +35,7 @@ isncf(output::AbstractOutputFile) = output.type == "ncf"
 
 const OutputFiles{T} = Vector{<:AbstractOutputFile{T}}
 
-OutputFiles(fpdir::FlexpartDir{T}) where T = OutputFiles{T}(fpdir[:output])
+OutputFiles(fpsim::FlexpartSim{T}) where T = OutputFiles{T}(fpsim[:output])
 
 _gettype(path::String) = occursin(".nc", basename(path)) ? "ncf" : "binary"
 _filter(files) = filter(x -> occursin("grid_", x), files)

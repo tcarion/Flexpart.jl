@@ -34,8 +34,8 @@ end
 # TODO improve this test
 @testset "Format and save Available" begin
     formated = format(av_from_dir)
-    FlexpartDir() do fpdir
-        av = Available(fpdir)
+    FlexpartSim() do fpsim
+        av = Available(fpsim)
         Flexpart.save(av)
     end
 end

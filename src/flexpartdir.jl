@@ -2,16 +2,16 @@
 # """
 #     $(TYPEDEF)
 
-# Abstract supertype for FlexpartDir object that can be:
-# - FlexpartDir{Deterministic} for deterministic flexpart runs
-# - FlexpartDir{Ensemble} for ensemble flexpart runs
+# Abstract supertype for FlexpartSim object that can be:
+# - FlexpartSim{Deterministic} for deterministic flexpart runs
+# - FlexpartSim{Ensemble} for ensemble flexpart runs
 # """
 # abstract type AbstractFlexpartDir end
 
 abstract type SimType end
 
-abstract type Deterministic <: SimType end
-abstract type Ensemble <: SimType end
+struct Deterministic <: SimType end
+struct Ensemble <: SimType end
 
 """
     FpPathnames
@@ -29,33 +29,33 @@ FpPathnames() = FpPathnames(DEFAULT_PATHNAMES...)
 
 """
     $(TYPEDEF)
-`FlexpartDir` represents the directory where the `pathnames` file is located. `pathnames` is the file indicating the paths 
+`FlexpartSim` represents the directory where the `pathnames` file is located. `pathnames` is the file indicating the paths 
 to the files and directories needed by Flexpart (options, output, input and available).
 
-The `FlexpartDir` object also indicates the type of the simulation:
-- `FlexpartDir{Deterministic}` for deterministic flexpart runs
-- `FlexpartDir{Ensemble}` for ensemble flexpart runs
+The `FlexpartSim` object also indicates the type of the simulation:
+- `FlexpartSim{Deterministic}` for deterministic flexpart runs
+- `FlexpartSim{Ensemble}` for ensemble flexpart runs
 
-If no type parameter is provided when using `FlexpartDir` constructors, the default will be `Deterministic`.
+If no type parameter is provided when using `FlexpartSim` constructors, the default will be `Deterministic`.
 """
-struct FlexpartDir{SimType} <: AbstractFlexDir
+struct FlexpartSim{SimType} <: AbstractFlexDir
     path::String
     pathnames::FpPathnames
-    # FlexpartDir(path::String) = is_fp_dir(path) && new(path)
+    simtype::SimType
 end
 
 """
     $(TYPEDSIGNATURES)
 
-Read the `pathnames` file in `path` to create a `FlexpartDir`.
+Read the `pathnames` file in `path` to create a `FlexpartSim`.
 """
-FlexpartDir(path::String) = FlexpartDir{Deterministic}(path, _fpdir_helper(path))
-FlexpartDir{T}(path::String) where T = FlexpartDir{T}(path, _fpdir_helper(path))
+FlexpartSim(path::String) = FlexpartSim(path, _fpdir_helper(path), Deterministic())
+FlexpartSim{T}(path::String) where T = FlexpartSim{T}(path, _fpdir_helper(path), T())
 
 """
     $(TYPEDSIGNATURES)
 
-Create a `FlexpartDir` in a temporary directory whith the default options and pathnames. It can be copied afterwards with [`copy`](@ref).
+Create a `FlexpartSim` in a temporary directory whith the default options and pathnames. It can be copied afterwards with [`copy`](@ref).
 
 The default paths for the pathnames are:
 
@@ -63,8 +63,8 @@ The default paths for the pathnames are:
 
 # Examples
 ```julia-repl
-julia> FlexpartDir()
-FlexpartDir{Deterministic} @ /tmp/jl_a8gDYX
+julia> FlexpartSim()
+FlexpartSim{Deterministic} @ /tmp/jl_a8gDYX
 pathnames:
         :options => "./options/"
         :output => "./output/"
@@ -72,54 +72,54 @@ pathnames:
         :available => "./AVAILABLE"
 ```
 """
-function FlexpartDir{T}() where T
+function FlexpartSim{T}() where T
     path = mktempdir()
     copyall(DEFAULT_FP_DIR, path)
-    FlexpartDir{T}(path)
+    FlexpartSim{T}(path)
 end
-FlexpartDir() = FlexpartDir{Deterministic}()
+FlexpartSim() = FlexpartSim{Deterministic}()
 
 """
     $(TYPEDSIGNATURES)
 
-Apply the function `f` to a `FlexpartDir` created in a temporary directory, and remove all of its content upon completion.
+Apply the function `f` to a `FlexpartSim` created in a temporary directory, and remove all of its content upon completion.
 
 # Examples
-julia> FlexpartDir() do fpdir
-            default_run(fpdir)
+julia> FlexpartSim() do fpsim
+            default_run(fpsim)
         end
 ```
 """
-function FlexpartDir{T}(f::Function) where T
+function FlexpartSim{T}(f::Function) where T
     mktempdir() do path
         copyall(DEFAULT_FP_DIR, path)
-        fpdir = FlexpartDir(path)
-        f(fpdir)
+        fpsim = FlexpartSim(path)
+        f(fpsim)
     end
 end
-FlexpartDir(f::Function) = FlexpartDir{Deterministic}(f)
+FlexpartSim(f::Function) = FlexpartSim{Deterministic}(f)
 
-function Base.show(io::IO, mime::MIME"text/plain", fpdir::FlexpartDir) 
-    println(io,"$(typeof(fpdir)) @ $(fpdir.path)")
-    show(io, mime, getpathnames(fpdir))
+function Base.show(io::IO, mime::MIME"text/plain", fpsim::FlexpartSim) 
+    println(io,"$(typeof(fpsim)) @ $(fpsim.path)")
+    show(io, mime, getpathnames(fpsim))
 end
-getpathnames(fpdir::FlexpartDir) = fpdir.pathnames
-getpath(fpdir::FlexpartDir) = fpdir.path
+getpathnames(fpsim::FlexpartSim) = fpsim.pathnames
+getpath(fpsim::FlexpartSim) = fpsim.path
 
-# Base.getindex(fpdir::FlexpartDir, name::Symbol) = getpathnames(fpdir)[name]
-# Base.getindex(fpdir::FlexpartDir, name::Symbol) = joinpath(getpath(fpdir), getpathnames(fpdir)[name]) |> Base.abspath
-# function Base.setindex!(fpdir::FlexpartDir, value::String, name::Symbol)
-#     getpathnames(fpdir)[name] = value
+# Base.getindex(fpsim::FlexpartSim, name::Symbol) = getpathnames(fpsim)[name]
+# Base.getindex(fpsim::FlexpartSim, name::Symbol) = joinpath(getpath(fpsim), getpathnames(fpsim)[name]) |> Base.abspath
+# function Base.setindex!(fpsim::FlexpartSim, value::String, name::Symbol)
+#     getpathnames(fpsim)[name] = value
 # end
 
 
 """
     $(TYPEDSIGNATURES)
 
-Copy an existing `FlexpartDir` to `path`.
+Copy an existing `FlexpartSim` to `path`.
 """
-function copy(fpdir::FlexpartDir, path::String) :: FlexpartDir
-    copyall(getpath(fpdir), path)
+function copy(fpsim::FlexpartSim, path::String) :: FlexpartSim
+    copyall(getpath(fpsim), path)
 end
 
 function _fpdir_helper(path::String)
@@ -135,34 +135,34 @@ function _fpdir_helper(path::String)
         end
     end
 end
-# pathnames(fpdir::FlexpartDir) = fpdir.pathnames
+# pathnames(fpsim::FlexpartSim) = fpsim.pathnames
 
 function create(path::String)
     newdir = mkdir(path)
     copyall(DEFAULT_FP_DIR, newdir)
-    newfpdir = FlexpartDir{Deterministic}(newdir)
+    newfpdir = FlexpartSim{Deterministic}(newdir)
     newfpdir
 end
 
-function pathnames(fpdir::FlexpartDir)
-    pathnames(pathnames_path(fpdir))
+function pathnames(fpsim::FlexpartSim)
+    pathnames(pathnames_path(fpsim))
 end
 
 function pathnames(path::String)
     readlines(path)
 end
-pathnames_path(fpdir::FlexpartDir) = joinpath(getpath(fpdir), DEFAULT_PATH_PATHNAMES) |> Base.abspath
+pathnames_path(fpsim::FlexpartSim) = joinpath(getpath(fpsim), DEFAULT_PATH_PATHNAMES) |> Base.abspath
 
-# abspath(fpdir::FlexpartDir, type::Symbol) = joinpath(getpath(fpdir), fpdir[type]) |> Base.abspath
+# abspath(fpsim::FlexpartSim, type::Symbol) = joinpath(getpath(fpsim), fpsim[type]) |> Base.abspath
 
 """
     $(TYPEDSIGNATURES)
 
-Write the current `FlexpartDir` paths to the `pathnames` file.
+Write the current `FlexpartSim` paths to the `pathnames` file.
 """
-function save(fpdir::FlexpartDir)
-    open(pathnames_path(fpdir), "w") do f
-        for (_, v) in getpathnames(fpdir)
+function save(fpsim::FlexpartSim)
+    open(pathnames_path(fpsim), "w") do f
+        for (_, v) in getpathnames(fpsim)
             Base.write(f, v*"\n")
         end
     end
@@ -171,13 +171,13 @@ end
 """
     $(TYPEDSIGNATURES)
 
-Write the current `FlexpartDir` paths to the `pathnames` file. Relative paths are converted
+Write the current `FlexpartSim` paths to the `pathnames` file. Relative paths are converted
 to absolute path.
 """
-function saveabs(fpdir::FlexpartDir)
-    open(pathnames_path(fpdir), "w") do f
-        for (k, _) in getpathnames(fpdir)
-            Base.write(f, fpdir[k]*"\n")
+function saveabs(fpsim::FlexpartSim)
+    open(pathnames_path(fpsim), "w") do f
+        for (k, _) in getpathnames(fpsim)
+            Base.write(f, fpsim[k]*"\n")
         end
     end
 end

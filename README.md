@@ -25,28 +25,28 @@ The first thing to do for running FLEXPART is to create a directory with a `path
 using Flexpart
 
 # You can create a default Flexpart directory with:
-fpdir = Flexpart.create("example")
+fpsim = Flexpart.create("example")
 
 # you can use an existing one with:
-fpdir = FlexpartDir("existing")
+fpsim = FlexpartSim("existing")
 
 # or you can create a temporary default directoy with:
-fpdir = FlexpartDir()
+fpsim = FlexpartSim()
 ```
 
 Then let's define the location of the input files:
 ```julia
-fpdir[:input] = "path/to/inputs"
+fpsim[:input] = "path/to/inputs"
 
 # This will write the changes to the pathnames file.
-Flexpart.save(fpdir)
+Flexpart.save(fpsim)
 ```
 
 The FLEXPART options can be modified this way:
 
 ```julia
 using Flexpart.FlexpartOptions
-options = FlexpartOption(fpdir)
+options = FlexpartOption(fpsim)
 
 # Options can be accessed and modified as a Julia Dictionnary
 options["COMMAND"][:COMMAND][:IOUT] = 9
@@ -60,7 +60,7 @@ Flexpart.save(options)
 
 And finally Flexpart can be run:
 ```julia
-Flexpart.run(fpdir)
+Flexpart.run(fpsim)
 ```
 
 The NetCDF output can be easily read and plotted with Rasters.jl and Plots.jl:
@@ -68,7 +68,7 @@ The NetCDF output can be easily read and plotted with Rasters.jl and Plots.jl:
 ```julia
 using Rasters, Plots
 # loading of the output file
-output_file = first(OutputFiles(fpdir))
+output_file = first(OutputFiles(fpsim))
 
 # we read the output with Rasters.jl
 output_stack = RasterStack(string(output_file))

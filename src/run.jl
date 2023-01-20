@@ -1,41 +1,41 @@
-function getcmd(fpdir::FlexpartDir)
-    pn_path = pathnames_path(fpdir)
+function getcmd(fpsim::FlexpartSim)
+    pn_path = pathnames_path(fpsim)
     `$CMD_FLEXPART $pn_path`
 end
 
 """
     $(TYPEDSIGNATURES)
 
-Run Flexpart using the paths of `fpdir`.
+Run Flexpart using the paths of `fpsim`.
 """
-function run(fpdir::FlexpartDir{Deterministic}; log = false) 
+function run(fpsim::FlexpartSim{Deterministic}; log = false) 
     if log == false 
-        _run_helper(fpdir; f = nothing)
+        _run_helper(fpsim; f = nothing)
     else
-        logpath = joinpath(fpdir[:output], "output.log")
+        logpath = joinpath(fpsim[:output], "output.log")
         open(logpath, "w") do logf
-            run(fpdir) do io
+            run(fpsim) do io
                 log_output(io, logf)
             end
         end
     end
 end
 
-run(f::Function, fpdir::FlexpartDir{Deterministic}) = _run_helper(fpdir; f = f)
+run(f::Function, fpsim::FlexpartSim{Deterministic}) = _run_helper(fpsim; f = f)
 
-run(fpdir::FlexpartDir{Ensemble}) = _run_helper(fpdir)
+run(fpsim::FlexpartSim{Ensemble}) = _run_helper(fpsim)
 
-run() = FlexpartDir() do fpdir
-    default_run(fpdir)
+run() = FlexpartSim() do fpsim
+    default_run(fpsim)
 end
 
-function _run_helper(fpdir::FlexpartDir{Deterministic}; f = nothing)
+function _run_helper(fpsim::FlexpartSim{Deterministic}; f = nothing)
     # println("The following command will be run : $cmd")
-    tempfpdir = FlexpartDir()
-    tempfpdir[:options] = fpdir[:options]
-    tempfpdir[:output] = fpdir[:output]
-    tempfpdir[:input] = fpdir[:input]
-    tempfpdir[:available] = fpdir[:available]
+    tempfpdir = FlexpartSim()
+    tempfpdir[:options] = fpsim[:options]
+    tempfpdir[:output] = fpsim[:output]
+    tempfpdir[:input] = fpsim[:input]
+    tempfpdir[:available] = fpsim[:available]
 
     save(tempfpdir)
     cmd = getcmd(tempfpdir)
@@ -53,26 +53,26 @@ function _run_helper(fpdir::FlexpartDir{Deterministic}; f = nothing)
     end
 end
 
-function _run_helper(fpdir::FlexpartDir{Ensemble})
-    inputs = InputFiles(fpdir[:input])
+function _run_helper(fpsim::FlexpartSim{Ensemble})
+    inputs = InputFiles(fpsim[:input])
     members = [x.member for x in inputs] |> unique 
     sep_inputs = [filter(x -> x.member==i, inputs) for i in members]
 
     for realization in sep_inputs
         imember = realization[1].member
-        tempfpdir = FlexpartDir()
-        memb_out_path = joinpath(fpdir[:output], "member$(imember)")
+        tempfpdir = FlexpartSim()
+        memb_out_path = joinpath(fpsim[:output], "member$(imember)")
         mkpath(memb_out_path)
-        tempfpdir[:options] = fpdir[:options]
+        tempfpdir[:options] = fpsim[:options]
         tempfpdir[:output] = memb_out_path
-        tempfpdir[:input] = fpdir[:input]
+        tempfpdir[:input] = fpsim[:input]
 
         det_inputs = convert.(DeterministicInput, realization)
         real_av = Available(det_inputs, tempfpdir[:available])
         save(real_av)
         saveabs(tempfpdir)
         
-        log_path = joinpath(getpath(fpdir), "member$(imember).log")
+        log_path = joinpath(getpath(fpsim), "member$(imember).log")
         @async open(log_path, "w") do logf
             run(tempfpdir) do io
                 log_output(io, logf)
@@ -90,14 +90,14 @@ function log_output(io::IO, fileio::IO)
     flush(fileio)
 end
 
-function default_run(fpdir::FlexpartDir{Deterministic})
-    fpdir[:input] = abspath(FP_TESTS_DETER_INPUT)
-    dummy_run(fpdir)
+function default_run(fpsim::FlexpartSim{Deterministic})
+    fpsim[:input] = abspath(FP_TESTS_DETER_INPUT)
+    dummy_run(fpsim)
 end
 
-function dummy_run(fpdir::FlexpartDir{Deterministic})
-    avs = Available(fpdir)
-    options = FlexpartOption(fpdir)
+function dummy_run(fpsim::FlexpartSim{Deterministic})
+    avs = Available(fpsim)
+    options = FlexpartOption(fpsim)
     set_cmd_dates!(options, avs)
     set_release_at_start!(options, avs, Dates.Minute(30))
     input_area = grib_area(avs[1])
@@ -105,10 +105,10 @@ function dummy_run(fpdir::FlexpartDir{Deterministic})
     lat = input_area[3] + (input_area[1] - input_area[3]) / 2
     set_point_release!(options, lon, lat)
     gridres, _ = Flexpart.grib_resolution(avs[1])
-    outgrid = Flexpart.area2outgrid(fpdir, gridres)
+    outgrid = Flexpart.area2outgrid(fpsim, gridres)
     merge!(options["OUTGRID"][:OUTGRID], outgrid)
     options["COMMAND"][:COMMAND][1][:IOUT] = 9
     Flexpart.save(avs)
     Flexpart.save(options)
-    Flexpart.run(fpdir)
+    Flexpart.run(fpsim)
 end
