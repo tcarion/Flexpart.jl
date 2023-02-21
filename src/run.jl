@@ -54,7 +54,7 @@ function _run_helper(fpsim::FlexpartSim{Deterministic}; f = nothing)
 end
 
 function _run_helper(fpsim::FlexpartSim{Ensemble})
-    inputs = InputFiles(fpsim[:input])
+    inputs = inputs_from_dir(fpsim[:input])
     members = [x.member for x in inputs] |> unique 
     sep_inputs = [filter(x -> x.member==i, inputs) for i in members]
 

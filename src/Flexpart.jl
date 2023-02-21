@@ -15,12 +15,19 @@ export
     SimType,
     Deterministic,
     Ensemble,
-    InputFiles,
     Available,
     FlexpartOption,
     FeControl,
     FlexExtractDir,
     set_steps!
+
+export 
+    InputFiles, 
+    Available, 
+    DeterministicInput, 
+    EnsembleInput,
+    AbstractInputFile,
+    inputs_from_dir
 
 export    
     AbstractOutputFile,
@@ -78,13 +85,12 @@ include("abstracts.jl")
 include("flexpartsim.jl")
 include("readgrib.jl")
 include("utils.jl")
-include("FlexpartInputs.jl")
+include("inputs.jl")
 include("FlexpartOptions.jl")
 include("outputs.jl")
 include("FlexExtract.jl")
 include("run.jl")
 
-using .FlexpartInputs
 using .FlexpartOptions
 # using .FlexpartOutputs
 using .FlexExtract
