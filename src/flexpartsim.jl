@@ -40,6 +40,14 @@ function save(pn::FpPathnames)
         end
     end
 end
+function saveabs(pn::FpPathnames)
+    open(pathnames_path(pn), "w") do f
+        for (k, _) in pn
+            Base.write(f, pn[k]*"\n")
+        end
+    end
+    return pathnames_path(pn)
+end
 
 pathnames_path(o) = joinpath(getpath(o), PATHNAMES_FILENAME) |> Base.abspath
 pathnames_path(path::String) = joinpath(path, PATHNAMES_FILENAME) |> Base.abspath
@@ -69,6 +77,7 @@ getpath(fpsim::FlexpartSim) = getpath(getpathnames(fpsim))
 Read the `pathnames` file in `path` to create a `FlexpartSim`.
 """
 FlexpartSim{T}(path::String) where T = FlexpartSim(FpPathnames(path), T())
+FlexpartSim{T}(pn::FpPathnames) where T = FlexpartSim(pn, T())
 FlexpartSim(path::String) = FlexpartSim{Deterministic}(path)
 
 """
@@ -157,9 +166,8 @@ end
 
 Write the current `FlexpartSim` paths to the `pathnames` file.
 """
-function save(fpsim::FlexpartSim)
-    save(getpathnames(fpsim))
-end
+save(fpsim::FlexpartSim) = save(getpathnames(fpsim))
+
 
 """
     $(TYPEDSIGNATURES)
@@ -167,10 +175,4 @@ end
 Write the current `FlexpartSim` paths to the `pathnames` file. Relative paths are converted
 to absolute path.
 """
-function saveabs(fpsim::FlexpartSim)
-    open(pathnames_path(fpsim), "w") do f
-        for (k, _) in getpathnames(fpsim)
-            Base.write(f, fpsim[k]*"\n")
-        end
-    end
-end
+saveabs(fpsim::FlexpartSim) = saveabs(getpathnames(fpsim))
