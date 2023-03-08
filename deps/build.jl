@@ -1,6 +1,9 @@
 using PyCall
+using Conda
 
-const PIP_PACKAGES = ["eccodes", "genshi", "numpy", "cdsapi", "ecmwf-api-client"]
+const PIP_PACKAGES = ["genshi", "numpy", "cdsapi", "ecmwf-api-client"]
+
+Conda.add("eccodes", channel="conda-forge")
 
 # Install the python dependencies for flex_extract
 # See https://discourse.julialang.org/t/pycall-pre-installing-a-python-package-required-by-a-julia-package/3316/16

@@ -6,6 +6,7 @@ using Dates
 using FlexExtract_jll
 using Pkg.Artifacts
 using PyCall
+using Conda
 import EcRequests
 using EcRequests: EcRequestType
 
@@ -41,6 +42,11 @@ const PATH_PYTHON_SCRIPTS = Dict(
 )
 
 const PYTHON_EXECUTABLE = PyCall.python
+
+# # ! I really would like to avoid that. But flex_extract is using the `grib_ls` executable with `subprocess.check_call`, and I couldn't find another way of making it available.
+# function __init__()
+#     ENV["PATH"] = "$(Conda.BINDIR):$(ENV["PATH"])"
+# end
 
 _default_control(filename) = joinpath(PATH_FLEXEXTRACT_CONTROL_DIR, filename)
 # const ecmwfapi = PyNULL()
@@ -177,6 +183,8 @@ ferequests(path::String) = allrequests(CSV.File(path, normalizenames= true))
 adapt_env(cmd) = addenv(cmd, CMD_CALC_ETADOT.env)
 function adapt_and_run(cmd)
     cmd_with_new_env = adapt_env(cmd)
+    # The following line would be the ideal way of doing this. But it's not possible to modify the ENV twice. Error: ArgumentError: Non-default environment behavior is only permitted for the first interpolant.
+    # Conda.runconda(`run $cmd_with_new_env`)
     Base.run(cmd_with_new_env)
 end
 
