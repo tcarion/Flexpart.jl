@@ -48,6 +48,14 @@ function saveabs(pn::FpPathnames)
     end
     return pathnames_path(pn)
 end
+function saverel(pn::FpPathnames)
+    open(pathnames_path(pn), "w") do f
+        for (k, _) in pn
+            Base.write(f, relpath(pn[k], pn.dirpath) *"\n")
+        end
+    end
+    return pathnames_path(pn)
+end
 
 pathnames_path(o) = joinpath(getpath(o), PATHNAMES_FILENAME) |> Base.abspath
 pathnames_path(path::String) = joinpath(path, PATHNAMES_FILENAME) |> Base.abspath
@@ -176,3 +184,5 @@ Write the current `FlexpartSim` paths to the `pathnames` file. Relative paths ar
 to absolute path.
 """
 saveabs(fpsim::FlexpartSim) = saveabs(getpathnames(fpsim))
+
+saverel(fpsim::FlexpartSim) = saverel(getpathnames(fpsim))

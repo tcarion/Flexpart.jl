@@ -84,6 +84,40 @@ function _run_helper(fpsim::FlexpartSim{Ensemble})
     # end
 end
 
+function setup_pathnames(fpsim::FlexpartSim{Ensemble}; parent = tempdir())
+
+    sep_inputs = _filter_members(fpsim)
+
+    map(sep_inputs) do realization
+        imember = realization[1].member
+        realization_tmpdir = mktempdir(parent)
+        pn = FpPathnames()
+        pn.dirpath = realization_tmpdir
+
+        memb_out_path = joinpath(fpsim[:output], "member$(imember)")
+        mkpath(memb_out_path)
+        pn.output = memb_out_path
+        pn.options = fpsim[:options]
+        pn.input = fpsim[:input]
+        det_inputs = convert.(DeterministicInput, realization)
+
+        real_av = Available(det_inputs, pn[:available])
+        save(real_av)
+        saverel(pn)
+
+        realization_fpsim = FlexpartSim{Deterministic}(pn)
+        imember, realization_fpsim
+    end
+end
+
+function _filter_members(fpsim)
+    inputs = _available_from_file(fpsim[:input], fpsim[:available])
+    members = [x.member for x in inputs] |> unique 
+    sep_inputs = [filter(x -> x.member==i, inputs) for i in members]
+    return sep_inputs
+end
+
+
 function log_output(io::IO, fileio::IO)
     line = readline(io, keep=true)
     Base.write(fileio, line)

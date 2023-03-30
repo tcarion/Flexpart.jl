@@ -1,4 +1,5 @@
 abstract type AbstractOutputFile{SimType} end
+getpath(output::AbstractOutputFile) = output.path
 Base.convert(::Type{<:AbstractString}, output::AbstractOutputFile) = output.path
 Base.string(out::AbstractOutputFile) = convert(String, out)
 
@@ -47,18 +48,17 @@ function OutputFiles{Deterministic}(path::String)
     end
 end
 
-# TO BE TESTED
 function OutputFiles{Ensemble}(path::String)
     files = readdir(path, join = true)
     outfiles = EnsembleOutput[]
     for file in files
         m = match(r"member(\d*)", file)
+        isnothing(m) && continue
         number = parse(Int, m.captures[1])
-        memdirfiles = joinpath(path, file) |> readdir
+        memdirfiles = readdir(joinpath(path, file), join=true)
         ffiles = _filter(memdirfiles)
         for memfile in ffiles
-            path = joinpath(memfile, ncfile)
-            push!(outfiles, EnsembleOutput(path, _gettype(path), number))
+            push!(outfiles, EnsembleOutput(memfile, _gettype(memfile), number))
         end
     end
     outfiles
