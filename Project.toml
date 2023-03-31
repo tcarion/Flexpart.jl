@@ -11,12 +11,10 @@ FLEXPART_jll = "f469b0c9-c763-5b61-b20e-7fa8370129c5"
 GRIB = "b16dfd50-4035-11e9-28d4-9dfe17e6779b"
 NetCDFF_jll = "78e728a9-57fe-5d11-897c-5014b89e5f84"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 
 [compat]
 DataStructures = "0.18"
 DocStringExtensions = "0.9"
 GRIB = "0.3"
 NetCDFF_jll = "~4.5.3"
-PyCall = "1"
 julia = "1"
