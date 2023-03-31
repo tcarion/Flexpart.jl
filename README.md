@@ -43,7 +43,6 @@ Flexpart.save(fpsim)
 The FLEXPART options can be modified this way:
 
 ```julia
-using Flexpart.FlexpartOptions
 options = FlexpartOption(fpsim)
 
 # Options can be accessed and modified as a Julia Dictionnary

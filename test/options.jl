@@ -1,4 +1,3 @@
-using Flexpart.FlexpartOptions
 using Flexpart
 using Test
 

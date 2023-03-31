@@ -34,7 +34,7 @@ julia> fpoptions = FlexpartOption(FlexpartSim())
 julia> Flexpart.set_release_duration!(fpoptions["RELEASES"][:RELEASE][1], Dates.now(), Dates.Second(120))
 ```
 """
-function set_release_duration!(release::FlexpartOptions.OptionEntriesType, start::DateTime, duration::Dates.AbstractTime)
+function set_release_duration!(release::OptionEntriesType, start::DateTime, duration::Dates.AbstractTime)
     stop = start + duration
     set_release_dates!(release, start, stop)
 end
@@ -49,7 +49,7 @@ julia> fpoptions = FlexpartOption(FlexpartSim())
 julia> Flexpart.set_release_dates!(fpoptions["RELEASES"][:RELEASE][1], Dates.now(), Dates.now() + Dates.Second(120))
 ```
 """
-function set_release_dates!(release::FlexpartOptions.OptionEntriesType, start::DateTime, stop::DateTime)
+function set_release_dates!(release::OptionEntriesType, start::DateTime, stop::DateTime)
     release[:IDATE1] = _date_format(start)
     release[:ITIME1] = _time_format(start)
     release[:IDATE2] = _date_format(stop)
@@ -61,7 +61,7 @@ end
 
 Update a release option `release` location with `lon` and `lat`.
 """
-function set_point_release!(release::FlexpartOptions.OptionEntriesType, lon, lat)
+function set_point_release!(release::OptionEntriesType, lon, lat)
     release[:LAT1] = lat
     release[:LAT2] = lat
     release[:LON1] = lon

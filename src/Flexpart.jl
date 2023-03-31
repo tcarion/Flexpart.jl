@@ -4,7 +4,7 @@ module Flexpart
 using GRIB
 using Pkg.Artifacts
 using Dates
-using DataStructures: OrderedDict
+using DataStructures: OrderedDict, DefaultOrderedDict
 using DocStringExtensions
 using FLEXPART_jll
 # using Debugger
@@ -17,7 +17,6 @@ export
     Ensemble,
     Available,
     FlexpartOption,
-    FeControl,
     set_steps!
 
 export 
@@ -85,13 +84,9 @@ include("flexpartsim.jl")
 include("readgrib.jl")
 include("utils.jl")
 include("inputs.jl")
-include("FlexpartOptions.jl")
+include("options.jl")
 include("outputs.jl")
 include("run.jl")
-
-using .FlexpartOptions
-# using .FlexpartOutputs
-
 include("miscellaneous.jl")
 
 end

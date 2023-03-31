@@ -1,17 +1,3 @@
-module FlexpartOptions
-
-using ..Flexpart: FlexpartSim, grib_area, writelines
-import ..Flexpart
-
-using DataStructures: OrderedDict, DefaultOrderedDict
-using Dates
-using DocStringExtensions
-
-export
-    FlexpartOption,
-    species_name,
-    specie_number
-
 
 const DEFAULT_OPTIONS_PATH = joinpath(Flexpart.DEFAULT_FP_DIR, "options")
 struct NotNamelistError <: Exception
@@ -280,5 +266,3 @@ end
 #     file2 = joinpath(Flexpart.abspath(fpdir2, which), filename2)
 #     compare(file1, file2)
 # end
-
-end
