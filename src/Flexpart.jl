@@ -18,7 +18,6 @@ export
     Available,
     FlexpartOption,
     FeControl,
-    FlexExtractDir,
     set_steps!
 
 export 
@@ -88,12 +87,10 @@ include("utils.jl")
 include("inputs.jl")
 include("FlexpartOptions.jl")
 include("outputs.jl")
-include("FlexExtract.jl")
 include("run.jl")
 
 using .FlexpartOptions
 # using .FlexpartOutputs
-using .FlexExtract
 
 include("miscellaneous.jl")
 

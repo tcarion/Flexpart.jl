@@ -10,8 +10,6 @@ Flexpart.jl is a Julia interface to the [FLEXPART](https://www.flexpart.eu/) Lag
 
 - It makes the FLEXPART executable available in the Julia environment.
 - It maps the FLEXPART syntax to common Julia data structures to facilitate the settings of simulations in Julia
-- It makes flex_extract available for the retrieval and pre-processing of FLEXPART inputs.
-
 
 ## Installation
 The package is not yet on the official registry, and must be installed this way:
@@ -34,7 +32,7 @@ fpsim = FlexpartSim("existing")
 fpsim = FlexpartSim()
 ```
 
-Then let's define the location of the input files:
+Then let's define the location of the input files. The retrieval and pre-processing of the input meteorological data for Flexpart needs to be done with the [FlexExtract.jl](https://github.com/tcarion/FlexExtract.jl) package.
 ```julia
 fpsim[:input] = "path/to/inputs"
 

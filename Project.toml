@@ -4,23 +4,18 @@ authors = ["Tristan Carion <tristancarion@gmail.com> and contributors"]
 version = "0.1.0"
 
 [deps]
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
-EcRequests = "c0c4b1a4-92fd-414d-990e-850c1287bada"
 FLEXPART_jll = "f469b0c9-c763-5b61-b20e-7fa8370129c5"
-FlexExtract_jll = "928114cd-b949-50c5-8a7b-63c9d706fec3"
 GRIB = "b16dfd50-4035-11e9-28d4-9dfe17e6779b"
 NetCDFF_jll = "78e728a9-57fe-5d11-897c-5014b89e5f84"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 
 [compat]
-CSV = "0.10"
 DataStructures = "0.18"
 DocStringExtensions = "0.9"
-EcRequests = "0.1"
 GRIB = "0.3"
 NetCDFF_jll = "~4.5.3"
 PyCall = "1"
