@@ -84,13 +84,13 @@ function _run_helper(fpsim::FlexpartSim{Ensemble})
     # end
 end
 
-function setup_pathnames(fpsim::FlexpartSim{Ensemble}; parent = tempdir())
+function setup_pathnames(fpsim::FlexpartSim{Ensemble}; parentdir = tempdir())
 
     sep_inputs = _filter_members(fpsim)
 
     map(sep_inputs) do realization
         imember = realization[1].member
-        realization_tmpdir = mktempdir(parent)
+        realization_tmpdir = mktempdir(parentdir)
         pn = FpPathnames()
         pn.dirpath = realization_tmpdir
 
