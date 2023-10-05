@@ -1,8 +1,8 @@
 using Flexpart
 
 @testset "Miscellaneous" begin
-    FlexpartDir() do fpdir
-        fpoptions = FlexpartOption(fpdir)
+    FlexpartSim() do fpsim
+        fpoptions = FlexpartOption(fpsim)
 
         Flexpart.set_specie!(fpoptions, "CH4")
         @test fpoptions["RELEASES"][:RELEASES_CTRL][:SPECNUM_REL].value == 26

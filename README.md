@@ -10,8 +10,6 @@ Flexpart.jl is a Julia interface to the [FLEXPART](https://www.flexpart.eu/) Lag
 
 - It makes the FLEXPART executable available in the Julia environment.
 - It maps the FLEXPART syntax to common Julia data structures to facilitate the settings of simulations in Julia
-- It makes flex_extract available for the retrieval and pre-processing of FLEXPART inputs.
-
 
 ## Installation
 The package is not yet on the official registry, and must be installed this way:
@@ -25,28 +23,27 @@ The first thing to do for running FLEXPART is to create a directory with a `path
 using Flexpart
 
 # You can create a default Flexpart directory with:
-fpdir = Flexpart.create("example")
+fpsim = Flexpart.create("example")
 
 # you can use an existing one with:
-fpdir = FlexpartDir("existing")
+fpsim = FlexpartSim("existing")
 
 # or you can create a temporary default directoy with:
-fpdir = FlexpartDir()
+fpsim = FlexpartSim()
 ```
 
-Then let's define the location of the input files:
+Then let's define the location of the input files. The retrieval and pre-processing of the input meteorological data for Flexpart needs to be done with the [FlexExtract.jl](https://github.com/tcarion/FlexExtract.jl) package.
 ```julia
-fpdir[:input] = "path/to/inputs"
+fpsim[:input] = "path/to/inputs"
 
 # This will write the changes to the pathnames file.
-Flexpart.save(fpdir)
+Flexpart.save(fpsim)
 ```
 
 The FLEXPART options can be modified this way:
 
 ```julia
-using Flexpart.FlexpartOptions
-options = FlexpartOption(fpdir)
+options = FlexpartOption(fpsim)
 
 # Options can be accessed and modified as a Julia Dictionnary
 options["COMMAND"][:COMMAND][:IOUT] = 9
@@ -60,7 +57,7 @@ Flexpart.save(options)
 
 And finally Flexpart can be run:
 ```julia
-Flexpart.run(fpdir)
+Flexpart.run(fpsim)
 ```
 
 The NetCDF output can be easily read and plotted with Rasters.jl and Plots.jl:
@@ -68,7 +65,7 @@ The NetCDF output can be easily read and plotted with Rasters.jl and Plots.jl:
 ```julia
 using Rasters, Plots
 # loading of the output file
-output_file = first(OutputFiles(fpdir))
+output_file = first(OutputFiles(fpsim))
 
 # we read the output with Rasters.jl
 output_stack = RasterStack(string(output_file))

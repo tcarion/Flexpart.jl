@@ -1,10 +1,9 @@
-using Flexpart.FlexpartOptions
 using Flexpart
 using Test
 
-fpdir = FlexpartDir()
+fpsim = FlexpartSim()
 fpoptions_def = FlexpartOption()
-fpoptions = FlexpartOption(fpdir)
+fpoptions = FlexpartOption(fpsim)
 
 @testset "Access and change option values" begin
     @test fpoptions["COMMAND"][:COMMAND][:LDIRECT].value == "1"

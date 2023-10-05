@@ -1,17 +1,3 @@
-module FlexpartOptions
-
-using ..Flexpart: FlexpartDir, grib_area, writelines
-import ..Flexpart
-
-using DataStructures: OrderedDict, DefaultOrderedDict
-using Dates
-using DocStringExtensions
-
-export
-    FlexpartOption,
-    species_name,
-    specie_number
-
 
 const DEFAULT_OPTIONS_PATH = joinpath(Flexpart.DEFAULT_FP_DIR, "options")
 struct NotNamelistError <: Exception
@@ -143,7 +129,7 @@ end
 
 FlexpartOption(path::String) = FlexpartOption(path, walkoptions(path))
 
-FlexpartOption(fpdir::FlexpartDir) = FlexpartOption(fpdir[:options])
+FlexpartOption(fpsim::FlexpartSim) = FlexpartOption(fpsim[:options])
 
 FlexpartOption() = FlexpartOption("", walkoptions(DEFAULT_OPTIONS_PATH))
 
@@ -160,8 +146,8 @@ Base.filter(f::Any, fpopt::FlexpartOption, args...) = filter(f, parent(fpopt), a
 Return the names of the species that are available by default with Flexpart
 """
 function species_name()
-    FlexpartDir() do fpdir
-        [v[:SPECIES_PARAMS][:PSPECIES].value for (k, v) in FlexpartOption(fpdir) if occursin("SPECIES", k)]
+    FlexpartSim() do fpsim
+        [v[:SPECIES_PARAMS][:PSPECIES].value for (k, v) in FlexpartOption(fpsim) if occursin("SPECIES", k)]
     end
 end
 
@@ -181,8 +167,8 @@ function specie_number(specie::AbstractString)
     if !(specie in replace.(fp_species, "\"" => ""))
         error("the specie name $specie has not been found in Flexpart default species")
     end
-    FlexpartDir() do fpdir
-        allspecies = filter(p -> occursin("SPECIES", first(p)), FlexpartOption(fpdir))
+    FlexpartSim() do fpsim
+        allspecies = filter(p -> occursin("SPECIES", first(p)), FlexpartOption(fpsim))
         specie_opt = filter(p -> occursin(specie, p[2][:SPECIES_PARAMS][:PSPECIES].value), allspecies)
         parse(Int, first(first(specie_opt))[end-2:end])
     end
@@ -274,11 +260,9 @@ end
 #     # diffs
 # end
 
-# function compare(fpdir1::FlexpartDir, fpdir2::FlexpartDir, filename1::String; filename2::String = "", which = :output)
+# function compare(fpdir1::FlexpartSim, fpdir2::FlexpartSim, filename1::String; filename2::String = "", which = :output)
 #     filename2 = filename2 |> isempty ? filename1 : filename2
 #     file1 = joinpath(Flexpart.abspath(fpdir1, which), filename1)
 #     file2 = joinpath(Flexpart.abspath(fpdir2, which), filename2)
 #     compare(file1, file2)
 # end
-
-end

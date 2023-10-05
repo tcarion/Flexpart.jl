@@ -1,15 +1,19 @@
 import Flexpart: FP_TESTS_DETER_INPUT, FP_TESTS_ENS_INPUT, DEFAULT_FP_DIR, SimType, Deterministic, Ensemble
-import Flexpart.FlexpartInputs: InputFiles, DeterministicInput, EnsembleInput, AbstractInputFile, format
+import Flexpart: DeterministicInput, EnsembleInput, AbstractInputFile, format, input_type
 using Test, Dates
 using Flexpart
 
+# For debugging
+import Flexpart: _header, _input_from_available_line, _input_from_filename,_available_from_dir, _available_from_file
+
 infiles_path = readdir(FP_TESTS_DETER_INPUT, join = true)
-infilesdet = InputFiles(Deterministic, FP_TESTS_DETER_INPUT)
-infilesens = InputFiles(Ensemble, FP_TESTS_ENS_INPUT)
+infilesdet = inputs_from_dir(FP_TESTS_DETER_INPUT)
+infilesens = inputs_from_dir(FP_TESTS_ENS_INPUT)
 
 @testset "DeterministicInput and EnsembleInput" begin
     detin = DeterministicInput(infiles_path[1])
     @test detin.filename == "ENH21090500"
+    input_type(detin) == Deterministic
 end
 
 @testset "InputFiles length and filter" begin
@@ -22,8 +26,8 @@ end
 end
 
 av_default_path = joinpath(DEFAULT_FP_DIR, "AVAILABLE")
-av_from_file = Available{Deterministic}(av_default_path, FP_TESTS_DETER_INPUT, fromdir = false)
-av_from_dir = Available{Deterministic}(av_default_path, FP_TESTS_DETER_INPUT, fromdir = true)
+av_from_file = Available(FP_TESTS_DETER_INPUT, av_default_path; fromdir = false)
+av_from_dir = Available(FP_TESTS_DETER_INPUT, av_default_path; fromdir = true)
 
 @testset "Available length and filter" begin
     @test length(av_from_file) == 24
@@ -34,8 +38,8 @@ end
 # TODO improve this test
 @testset "Format and save Available" begin
     formated = format(av_from_dir)
-    FlexpartDir() do fpdir
-        av = Available(fpdir)
+    FlexpartSim() do fpsim
+        av = Available(fpsim)
         Flexpart.save(av)
     end
 end

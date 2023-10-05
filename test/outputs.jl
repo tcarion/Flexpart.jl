@@ -4,9 +4,9 @@ using Test
 using Dates
 
 @testset "Deterministic run and reading of output" begin
-    FlexpartDir() do fpdir
-        default_run(fpdir)
-        outputs = OutputFiles(fpdir)
+    FlexpartSim() do fpsim
+        default_run(fpsim)
+        outputs = OutputFiles(fpsim)
         @test outputs[1].type == "ncf"
     end
 end
