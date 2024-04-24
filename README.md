@@ -14,7 +14,7 @@ Flexpart.jl is a Julia interface to the [FLEXPART](https://www.flexpart.eu/) Lag
 ## Installation
 The package is not yet on the official registry, and must be installed this way:
 ```julia
-using Pkg; Pkg.add(url="https://github.com/tcarion/Flexpart.jl")
+using Pkg; Pkg.add(url="https://github.com/PaulPerezRMA/Flexpart.jl")
 ```
 
 ## Quick start
