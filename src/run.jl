@@ -1,6 +1,6 @@
 function getcmd(fpsim::FlexpartSim)
     pn_path = pathnames_path(fpsim)
-    `$CMD_FLEXPART $pn_path`
+    `$(FLEXPART()) $pn_path`
 end
 
 """
