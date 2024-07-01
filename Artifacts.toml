@@ -3,7 +3,7 @@ git-tree-sha1 = "d1de086cf33b0c8ab2a7158c96251c71d4cccf27"
 
     [[flexpart_data.download]]
     url = "https://github.com/PaulPerezRMA/FlexpartData/raw/main/flexpart_data.tar.gz"
-    sha256 = "378b7c54da8fda17488e13f10f5399ae1a603b2d5678e9632365aae9c459e66e"
+    sha256 = "0e981e63dfa92ef5d2ec8cbe5d3f99f42c125c0ce16977d44d9d09e0fade5c47"
 # [flexpart_data]
 # git-tree-sha1 = "8ba836dac6b721ae2792516e29d94233f3d20ecf"
 
