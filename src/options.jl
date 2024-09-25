@@ -109,9 +109,17 @@ function Base.setindex!(group::Vector{<:OptionEntriesType}, v, k::Symbol)
         throw(MultipleSubOptionError())
     end
 end
-function Base.merge!(group::Vector{<:OptionEntriesType}, dict::AbstractDict)
+function Base.merge!(group::Vector{<:OptionEntriesType}, dict::Union{AbstractDict, Vector{AbstractDict}})
     if length(group) == 1
-        merge!(group[1], dict)
+        if dict isa AbstractDict
+            merge!(group[1], dict)
+        else
+            merge!(group[1], dict[1])
+            for d in dict[2:end]
+                new_group_member = merge!(deepcopy(group[1]), d)
+                push!(group, new_group_member)
+            end
+        end
     else
         throw(MultipleSubOptionError())
     end
