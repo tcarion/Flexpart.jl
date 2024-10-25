@@ -51,6 +51,9 @@ function _run_helper(fpsim::FlexpartSim{Deterministic}; f = nothing)
 
         Base.run(pipeline(cmd, stdout=pipe, stderr=pipe))
     end
+    nc_file = joinpath(tempfpdir[:output], filter(x -> endswith(x, ".nc"), readdir(tempfpdir[:output]))[1])
+    _round_dims(nc_file)
+    add_total_depo(nc_file)
 end
 
 function _run_helper(fpsim::FlexpartSim{Ensemble})
@@ -117,6 +120,48 @@ function _filter_members(fpsim)
     return sep_inputs
 end
 
+function _round_dims(netcdf_file::AbstractString)
+    # Check if the file path is valid
+    if !ispath(netcdf_file)
+        throw(ArgumentError("The provided file path '$netcdf_file' is not valid."))
+    end
+    
+    ds = Dataset(netcdf_file, "r")
+    # Extract dimensions
+    longitudes = Float64.(round.(ds["longitude"][:], digits=4))
+    latitudes = Float64.(round.(ds["latitude"][:], digits=4))
+    close(ds)
+  
+    ds = Dataset(netcdf_file, "a")
+    # Round the coordinates
+    ds["longitude"][:] = longitudes
+    ds["latitude"][:] = latitudes
+    close(ds)
+end
+
+function add_total_depo(fp_output)
+    ds = Dataset(fp_output, "a")
+    if any(key -> occursin("WD_spec", key), keys(ds)) && any(key -> occursin("DD_spec", key), keys(ds))
+        wet_depo_keys = filter(v -> startswith(v, "WD_spec"), keys(ds))
+        dry_depo_keys = filter(v -> startswith(v, "DD_spec"), keys(ds))
+        for wet_key in wet_depo_keys
+            spec_num = wet_key[8:end]
+            dry_key = "DD_spec$spec_num"
+            total_key = "TD_spec$spec_num"
+            if !haskey(ds, total_key)
+                wet_depo = ds[wet_key]
+                dry_depo = ds[dry_key]
+                total_depo = Array(wet_depo) + Array(dry_depo)
+                defVar(ds, total_key, total_depo, dimnames(wet_depo), attrib=["units" => wet_depo.attrib["units"]])
+            else
+                nothing
+            end
+        end
+    else
+        nothing
+    end
+    close(ds)
+end
 
 function log_output(io::IO, fileio::IO)
     line = readline(io, keep=true)
