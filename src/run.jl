@@ -51,9 +51,11 @@ function _run_helper(fpsim::FlexpartSim{Deterministic}; f = nothing)
 
         Base.run(pipeline(cmd, stdout=pipe, stderr=pipe))
     end
-    nc_file = joinpath(tempfpdir[:output], filter(x -> endswith(x, ".nc"), readdir(tempfpdir[:output]))[1])
-    _round_dims(nc_file)
-    add_total_depo(nc_file)
+    if !isempty(filter(x -> endswith(x, ".nc"), readdir(tempfpdir[:output])))
+        nc_file = joinpath(tempfpdir[:output], filter(x -> endswith(x, ".nc"), readdir(tempfpdir[:output]))[1])
+        _round_dims(nc_file)
+        add_total_depo(nc_file)
+    end
 end
 
 function _run_helper(fpsim::FlexpartSim{Ensemble})
