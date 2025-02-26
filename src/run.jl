@@ -62,31 +62,33 @@ function _run_helper(fpsim::FlexpartSim{Ensemble})
     inputs = inputs_from_dir(fpsim[:input])
     members = [x.member for x in inputs] |> unique 
     sep_inputs = [filter(x -> x.member==i, inputs) for i in members]
+    batch_size = 3
 
-    for realization in sep_inputs
-        imember = realization[1].member
-        tempfpdir = FlexpartSim()
-        memb_out_path = joinpath(fpsim[:output], "member$(imember)")
-        mkpath(memb_out_path)
-        tempfpdir[:options] = fpsim[:options]
-        tempfpdir[:output] = memb_out_path
-        tempfpdir[:input] = fpsim[:input]
-
-        det_inputs = convert.(DeterministicInput, realization)
-        real_av = Available(det_inputs, tempfpdir[:available])
-        save(real_av)
-        saveabs(tempfpdir)
+    for batch in Iterators.partition(sep_inputs, batch_size)
+        @sync begin
+            for realization in batch
+                imember = realization[1].member
+                tempfpdir = FlexpartSim()
+                memb_out_path = joinpath(fpsim[:output], "member$(imember)")
+                mkpath(memb_out_path)
+                tempfpdir[:options] = fpsim[:options]
+                tempfpdir[:output] = memb_out_path
+                tempfpdir[:input] = fpsim[:input]
         
-        log_path = joinpath(getpath(fpsim), "member$(imember).log")
-        @async open(log_path, "w") do logf
-            run(tempfpdir) do io
-                log_output(io, logf)
+                det_inputs = convert.(DeterministicInput, realization)
+                real_av = Available(det_inputs, tempfpdir[:available])
+                save(real_av)
+                saveabs(tempfpdir)
+                
+                log_path = joinpath(getpath(fpsim), "member$(imember).log")
+                @async open(log_path, "w") do logf
+                    run(tempfpdir) do io
+                        log_output(io, logf)
+                    end
+                end 
             end
-        end 
+        end
     end
-    # for i in 0:nmember-1
-    #     push!(sep_inputs, filter(x -> x.member==i, inputs))
-    # end
 end
 
 function setup_pathnames(fpsim::FlexpartSim{Ensemble}; parentdir = tempdir())
