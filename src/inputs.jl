@@ -32,7 +32,7 @@ DeterministicInput(path::String) = _input_from_filename(path)
 """
     EnsembleInput
 
-Object that represents a ensemble input file.
+Object that represents an ensemble input file.
 
 $(TYPEDFIELDS)
 """

@@ -4,7 +4,7 @@ Base.convert(::Type{<:AbstractString}, output::AbstractOutputFile) = output.path
 Base.string(out::AbstractOutputFile) = convert(String, out)
 
 """
-    DeterministicInput
+    DeterministicOutput
 
 Object that represents a deterministic output file.
 
@@ -18,9 +18,9 @@ struct DeterministicOutput <: AbstractOutputFile{Deterministic}
 end
 
 """
-    EnsembleInput
+    EnsembleOutput
 
-Object that represents a ensemble output file.
+Object that represents an ensemble output file.
 
 $(TYPEDFIELDS)
 """
