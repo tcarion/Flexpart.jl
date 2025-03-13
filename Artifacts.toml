@@ -1,9 +1,9 @@
 [flexpart_data]
-git-tree-sha1 = "8ba836dac6b721ae2792516e29d94233f3d20ecf"
+git-tree-sha1 = "c1d231cbcc84120f4dc1ef9074f0032e5c38da5c"
 
     [[flexpart_data.download]]
     url = "https://github.com/tcarion/FlexpartData/raw/main/flexpart_data.tar.gz"
-    sha256 = "44683dd1a42d06283445db4a8c5024a2aa222983a75fd713510045973130913c"
+    sha256 = "448bc8fce9baf29bb9e03e77d46b6fb092e67a514c04b9917093f3540a53bfd2"
 # [flexpart]
 # git-tree-sha1 = "0cc3f787689d82e4bbd86697b0fceb1ccdf284e4"
 
