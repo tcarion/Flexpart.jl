@@ -7,19 +7,19 @@ fpoptions = FlexpartOption(fpsim)
 
 @testset "Access and change option values" begin
     @test fpoptions["COMMAND"][:COMMAND][:LDIRECT].value == "1"
-    @test fpoptions["RELEASES"][:RELEASE][:ZKIND].value == "1"
+    @test fpoptions["RELEASES"][:RELEASE][1][:ZKIND].value == "1"
     fpoptions["COMMAND"][:COMMAND][:LDIRECT] = "0"
     @test fpoptions["COMMAND"][:COMMAND][:LDIRECT].value == "0"
-    fpoptions["RELEASES"][:RELEASE][:COMMENT] = "foo"
+    fpoptions["RELEASES"][:RELEASE][1][:COMMENT] = "foo"
 end
 
 @testset "Add suboptions to option groups" begin
     newrel = deepcopy(fpoptions["RELEASES"][:RELEASE][1])
     @test newrel[:COMMENT].value == "foo"
     newrel[:COMMENT] = "bar"
-    @test fpoptions["RELEASES"][:RELEASE][:COMMENT].value == "foo"
+    @test fpoptions["RELEASES"][:RELEASE][1][:COMMENT].value == "foo"
     push!(fpoptions["RELEASES"][:RELEASE], newrel)
-    @test length(fpoptions["RELEASES"][:RELEASE]) == 2
+    @test length(fpoptions["RELEASES"][:RELEASE]) == 3
 end
 
 @testset "merge!" begin
@@ -33,6 +33,6 @@ end
 end
 
 @testset "other" begin
-    @test occursin("O3", Flexpart.species_name()[1])
+    @test occursin("AEROSOL", Flexpart.species_name()[1])
     @test Flexpart.specie_number("CH4") == 26
 end

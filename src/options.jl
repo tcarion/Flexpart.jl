@@ -163,6 +163,7 @@ julia> Flexpart.specie_number("CH4")
 ```
 """
 function specie_number(specie::AbstractString)
+    println("REVISED ?????")
     fp_species = Flexpart.species_name()
     if !(specie in replace.(fp_species, "\"" => ""))
         error("the specie name $specie has not been found in Flexpart default species")
@@ -170,7 +171,11 @@ function specie_number(specie::AbstractString)
     FlexpartSim() do fpsim
         allspecies = filter(p -> occursin("SPECIES", first(p)), FlexpartOption(fpsim))
         specie_opt = filter(p -> occursin(specie, p[2][:SPECIES_PARAMS][:PSPECIES].value), allspecies)
-        parse(Int, first(first(specie_opt))[end-2:end])
+        try
+            parse(Int, first(first(specie_opt))[end-2:end])
+        catch
+            error("The specie file seems not to have a proper name format. It must be SPECIES_XXX with XXX being a digit.")
+        end
     end
 end
 
