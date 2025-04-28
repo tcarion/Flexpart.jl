@@ -89,6 +89,7 @@ function _run_helper(fpsim::FlexpartSim{Ensemble})
             end
         end
     end
+    create_ensemble_mean(fpsim)
 end
 
 function setup_pathnames(fpsim::FlexpartSim{Ensemble}; parentdir = tempdir())
@@ -129,13 +130,11 @@ function _round_dims(netcdf_file::AbstractString)
     if !ispath(netcdf_file)
         throw(ArgumentError("The provided file path '$netcdf_file' is not valid."))
     end
-    
     ds = Dataset(netcdf_file, "r")
     # Extract dimensions
     longitudes = Float64.(round.(ds["longitude"][:], digits=4))
     latitudes = Float64.(round.(ds["latitude"][:], digits=4))
     close(ds)
-  
     ds = Dataset(netcdf_file, "a")
     # Round the coordinates
     ds["longitude"][:] = longitudes
@@ -165,6 +164,43 @@ function add_total_depo(fp_output)
         nothing
     end
     close(ds)
+end
+
+function create_ensemble_mean(fpsim::FlexpartSim{Ensemble})
+    # List ensemble members netcdf file paths
+    output_dir = fpsim[:output]
+    filepaths = []
+    for i in range(1, count(f -> isdir(f), joinpath.(output_dir, readdir(output_dir))))
+        member_dir = joinpath(output_dir, "member$i")
+        push!(filepaths, joinpath(member_dir, filter(x -> endswith(x, ".nc"), readdir(member_dir))[1]))
+    end
+    # Create and initialize ensemble netcdf file
+    file_mean = joinpath(output_dir, "ensemble_mean.nc")
+    ds_mean = Dataset(file_mean, "c")
+    ds = Dataset(filepaths[1])
+    ds_mean["time"] = ds["time"]
+    ds_mean["longitude"] = ds["longitude"]
+    ds_mean["latitude"] = ds["latitude"]
+    ds_mean["height"] = ds["height"]
+    ds_mean["spec001_mr"] = ds["spec001_mr"]
+    ds_mean["TD_spec001"] = ds["TD_spec001"]
+    mean_conc = Array(ds["spec001_mr"])
+    mean_depo = Array(ds["TD_spec001"])
+    close(ds)
+    # Sum the data across all ensemble members
+    for file in filepaths[2:end]
+        ds = Dataset(file)
+        mean_conc .+= Array(ds["spec001_mr"])
+        mean_depo .+= Array(ds["TD_spec001"])
+        close(ds)
+    end
+    # Divide by number of members to get the mean
+    mean_conc ./= length(filepaths)
+    mean_depo ./= length(filepaths)
+    # Write the results to ensemble netcdf file
+    ds_mean["spec001_mr"][:] = mean_conc
+    ds_mean["TD_spec001"][:] = mean_depo
+    close(ds_mean)
 end
 
 function log_output(io::IO, fileio::IO)
