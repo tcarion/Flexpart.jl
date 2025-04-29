@@ -155,6 +155,8 @@ end
 
 function create(path::String; simtype = Deterministic)
     copyall(DEFAULT_FP_DIR, path)
+    isdir(joinpath(DEFAULT_FP_DIR, "input")) || mkdir(joinpath(DEFAULT_FP_DIR, "input"))
+    isdir(joinpath(DEFAULT_FP_DIR, "output")) || mkdir(joinpath(DEFAULT_FP_DIR, "output"))
     newfpdir = FlexpartSim{simtype}(pathnames_path(path))
     newfpdir
 end
