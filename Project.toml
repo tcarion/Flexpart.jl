@@ -15,6 +15,7 @@ Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 [compat]
 DataStructures = "0.18"
 DocStringExtensions = "0.9"
+FLEXPART_jll="10.4.0"
 GRIB = "0.3"
 NetCDFF_jll = "~4.5.3"
 julia = "1"
