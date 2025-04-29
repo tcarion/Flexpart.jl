@@ -142,6 +142,8 @@ function dummy_run(fpsim::FlexpartSim{Deterministic})
     outgrid = Flexpart.area2outgrid(fpsim, gridres)
     merge!(options["OUTGRID"][:OUTGRID], outgrid)
     options["COMMAND"][:COMMAND][1][:IOUT] = 9
+    options["COMMAND"][:COMMAND][:IND_RECEPTOR] = 0
+    options["COMMAND"][:COMMAND][:NXSHIFT] = 0
     Flexpart.save(avs)
     Flexpart.save(options)
     Flexpart.run(fpsim)
