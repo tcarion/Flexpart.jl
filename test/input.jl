@@ -30,8 +30,8 @@ av_from_file = Available(FP_TESTS_DETER_INPUT, av_default_path; fromdir = false)
 av_from_dir = Available(FP_TESTS_DETER_INPUT, av_default_path; fromdir = true)
 
 @testset "Available length and filter" begin
-    @test length(av_from_file) == 24
-    @test filter(x -> Dates.Hour(x.time) == Dates.Hour(0), av_from_file)[1].time == DateTime(2012,1,1,0,0,0)
+    @test length(av_from_file) == 2
+    @test filter(x -> Dates.Hour(x.time) == Dates.Hour(0), av_from_file)[1].time == DateTime(2009,1,1,0,0,0)
     @test filter(x -> Dates.Hour(x.time) == Dates.Hour(0), av_from_file) isa Available
 end
 

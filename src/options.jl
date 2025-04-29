@@ -6,8 +6,9 @@ end
 Base.showerror(io::IO, e::NotNamelistError) = print(io, "Namelist format not valid : ", e.filename)
 
 struct MultipleSubOptionError <: Exception
+    key::String
 end
-Base.showerror(io::IO, e::MultipleSubOptionError) = print(io, "Multiple sub options exist for this key.")
+Base.showerror(io::IO, e::MultipleSubOptionError) = print(io, "Multiple sub options exist for this key: $(e.key).")
 mutable struct OptionEntry
     name::Symbol
     value::Any
@@ -87,7 +88,7 @@ function Base.getindex(group::Vector{<:OptionEntriesType}, k::Symbol)
     if length(group) == 1
         group[1][k]
     else
-        throw(MultipleSubOptionError())
+        throw(MultipleSubOptionError(string(k)))
     end
 end
 function Base.setindex!(group::Vector{<:OptionEntriesType}, v, k::Symbol)
@@ -106,14 +107,14 @@ function Base.setindex!(group::Vector{<:OptionEntriesType}, v, k::Symbol)
     if length(group) == 1
         setindex!(group[1], v, k)
     else
-        throw(MultipleSubOptionError())
+        throw(MultipleSubOptionError(string(k)))
     end
 end
 function Base.merge!(group::Vector{<:OptionEntriesType}, dict::AbstractDict)
     if length(group) == 1
         merge!(group[1], dict)
     else
-        throw(MultipleSubOptionError())
+        throw(MultipleSubOptionError(string("undefined")))
     end
 end
 mutable struct FlexpartOption
@@ -170,7 +171,11 @@ function specie_number(specie::AbstractString)
     FlexpartSim() do fpsim
         allspecies = filter(p -> occursin("SPECIES", first(p)), FlexpartOption(fpsim))
         specie_opt = filter(p -> occursin(specie, p[2][:SPECIES_PARAMS][:PSPECIES].value), allspecies)
-        parse(Int, first(first(specie_opt))[end-2:end])
+        try
+            parse(Int, first(first(specie_opt))[end-2:end])
+        catch
+            error("The specie file seems not to have a proper name format. It must be SPECIES_XXX with XXX being a digit.")
+        end
     end
 end
 
