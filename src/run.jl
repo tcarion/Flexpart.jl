@@ -174,7 +174,7 @@ function create_ensemble_mean(fpsim::FlexpartSim{Ensemble})
         member_dir = joinpath(output_dir, "member$i")
         push!(filepaths, joinpath(member_dir, filter(x -> endswith(x, ".nc"), readdir(member_dir))[1]))
     end
-    # Create and initialize ensemble netcdf file
+    # Create and initialize ensemble mean netcdf file
     file_mean = joinpath(output_dir, "ensemble_mean.nc")
     ds_mean = Dataset(file_mean, "c")
     ds = Dataset(filepaths[1])
@@ -201,6 +201,64 @@ function create_ensemble_mean(fpsim::FlexpartSim{Ensemble})
     ds_mean["spec001_mr"][:] = mean_conc
     ds_mean["TD_spec001"][:] = mean_depo
     close(ds_mean)
+end
+
+function threshold_exceedance(fpsim::FlexpartSim{Ensemble}, var::AbstractString, threshold::Number, num_timestep::Int64, num_height::Union{Int64, Nothing}=nothing)
+    # List ensemble members netcdf file paths
+    output_dir = fpsim[:output]
+    filepaths = []
+    for i in range(1, count(f -> isdir(f), joinpath.(output_dir, readdir(output_dir))))
+        member_dir = joinpath(output_dir, "member$i")
+        push!(filepaths, joinpath(member_dir, filter(x -> endswith(x, ".nc"), readdir(member_dir))[1]))
+    end
+    file_mean = joinpath(output_dir, "ensemble_mean.nc")
+    push!(filepaths, file_mean)
+    # Get mask and contour for each member
+    masks = []
+    contours = []
+    if isnothing(num_height)
+        for (i, path) in enumerate(filepaths)
+            ds = Dataset(path, "r")
+            data = ds[var][:, :, num_timestep, 1, 1]
+            mask = data .>= threshold
+            close(ds)
+            push!(masks, mask)
+            ctr = _get_contour(mask)
+            push!(contours, ctr)
+        end
+    else
+        for (i, path) in enumerate(filepaths)
+            ds = Dataset(path, "r")
+            data = ds[var][:, :, num_height, num_timestep, 1, 1]
+            mask = data .>= threshold
+            close(ds)
+            push!(masks, mask)
+            ctr = _get_contour(mask)
+            push!(contours, ctr)
+        end
+    end        
+    # Compute threshold exceedance percentage over ensemble members
+    percent_exceed = sum(masks[1:end-1]) ./ length(filepaths[1:end-1]) .* 100
+    return Dict(:agreement => percent_exceed, :contours => contours)
+end
+
+function threshold_exceedance(pn_path::String, var::AbstractString, threshold::Number, num_timestep::Int64, num_height::Union{Int64, Nothing}=nothing)
+    fpsim = FlexpartSim{Ensemble}(pn_path)
+    return threshold_exceedance(fpsim, var, threshold, num_timestep, num_height)
+end
+
+function _get_contour(mask::BitMatrix)
+    # Create kernel
+    kernel = falses(3, 3)
+    kernel[2, 1] = kernel[2, 2] = kernel[2, 3] = kernel[1, 2] = kernel[3, 2] = true
+    # Pad the mask to avoid boundary issues
+    padded = falses(size(mask) .+ 2)
+    padded[2:end-1, 2:end-1] = mask
+    # Use ImageMorphology to erode the mask and then get the contour
+    eroded_padded = erode(padded, kernel)
+    eroded = eroded_padded[2:end-1, 2:end-1]
+    contour = mask .& .!eroded
+    return contour
 end
 
 function log_output(io::IO, fileio::IO)

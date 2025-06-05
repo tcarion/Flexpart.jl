@@ -7,6 +7,7 @@ using Dates
 using DataStructures: OrderedDict, DefaultOrderedDict
 using DocStringExtensions
 using NCDatasets
+using ImageMorphology
 using FLEXPART_jll
 # using Debugger
 # using PyPlot
