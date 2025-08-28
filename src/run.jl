@@ -62,33 +62,57 @@ function _run_helper(fpsim::FlexpartSim{Ensemble})
     inputs = inputs_from_dir(fpsim[:input])
     members = [x.member for x in inputs] |> unique 
     sep_inputs = [filter(x -> x.member==i, inputs) for i in members]
-    batch_size = 3
 
-    for batch in Iterators.partition(sep_inputs, batch_size)
-        @sync begin
-            for realization in batch
-                imember = realization[1].member
-                tempfpdir = FlexpartSim()
-                memb_out_path = joinpath(fpsim[:output], "member$(imember)")
-                mkpath(memb_out_path)
-                tempfpdir[:options] = fpsim[:options]
-                tempfpdir[:output] = memb_out_path
-                tempfpdir[:input] = fpsim[:input]
-        
-                det_inputs = convert.(DeterministicInput, realization)
-                real_av = Available(det_inputs, tempfpdir[:available])
-                save(real_av)
-                saveabs(tempfpdir)
-                
-                log_path = joinpath(getpath(fpsim), "member$(imember).log")
-                @async open(log_path, "w") do logf
-                    run(tempfpdir) do io
-                        log_output(io, logf)
-                    end
-                end 
+    for realization in sep_inputs
+        imember = realization[1].member
+        tempfpdir = FlexpartSim()
+        memb_out_path = joinpath(fpsim[:output], "member$(imember)")
+        mkpath(memb_out_path)
+        tempfpdir[:options] = fpsim[:options]
+        tempfpdir[:output] = memb_out_path
+        tempfpdir[:input] = fpsim[:input]
+
+        det_inputs = convert.(DeterministicInput, realization)
+        real_av = Available(det_inputs, tempfpdir[:available])
+        save(real_av)
+        saveabs(tempfpdir)
+
+        log_path = joinpath(getpath(fpsim), "member$(imember).log")
+        open(log_path, "w") do logf
+            run(tempfpdir) do io
+                log_output(io, logf)
             end
-        end
+        end 
     end
+
+    # # Find way to use batch parallelization, only if CPU allows it.
+    # batch_size = 3
+    # for batch in Iterators.partition(sep_inputs, batch_size)
+    #     @sync begin
+    #         for realization in batch
+    #             imember = realization[1].member
+    #             tempfpdir = FlexpartSim()
+    #             memb_out_path = joinpath(fpsim[:output], "member$(imember)")
+    #             mkpath(memb_out_path)
+    #             tempfpdir[:options] = fpsim[:options]
+    #             tempfpdir[:output] = memb_out_path
+    #             tempfpdir[:input] = fpsim[:input]
+        
+    #             det_inputs = convert.(DeterministicInput, realization)
+    #             real_av = Available(det_inputs, tempfpdir[:available])
+    #             save(real_av)
+    #             saveabs(tempfpdir)
+                
+    #             log_path = joinpath(getpath(fpsim), "member$(imember).log")
+    #             @async open(log_path, "w") do logf
+    #                 run(tempfpdir) do io
+    #                     log_output(io, logf)
+    #                 end
+    #             end 
+    #         end
+    #     end
+    # end
+
     create_ensemble_mean(fpsim)
 end
 
@@ -170,9 +194,13 @@ function create_ensemble_mean(fpsim::FlexpartSim{Ensemble})
     # List ensemble members netcdf file paths
     output_dir = fpsim[:output]
     filepaths = []
-    for i in range(1, count(f -> isdir(f), joinpath.(output_dir, readdir(output_dir))))
-        member_dir = joinpath(output_dir, "member$i")
-        push!(filepaths, joinpath(member_dir, filter(x -> endswith(x, ".nc"), readdir(member_dir))[1]))
+    member_dirs = filter(f -> isdir(joinpath(output_dir, f)), readdir(output_dir))
+    for member_dir in member_dirs
+        full_member_dir = joinpath(output_dir, member_dir)
+        nc_files = filter(x -> endswith(x, ".nc"), readdir(full_member_dir))
+        if !isempty(nc_files)
+            push!(filepaths, joinpath(full_member_dir, nc_files[1]))
+        end
     end
     # Create and initialize ensemble mean netcdf file
     file_mean = joinpath(output_dir, "ensemble_mean.nc")
