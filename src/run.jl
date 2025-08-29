@@ -194,40 +194,58 @@ function create_ensemble_mean(fpsim::FlexpartSim{Ensemble})
     # List ensemble members netcdf file paths
     output_dir = fpsim[:output]
     filepaths = []
-    member_dirs = filter(f -> isdir(joinpath(output_dir, f)), readdir(output_dir))
-    for member_dir in member_dirs
-        full_member_dir = joinpath(output_dir, member_dir)
-        nc_files = filter(x -> endswith(x, ".nc"), readdir(full_member_dir))
-        if !isempty(nc_files)
-            push!(filepaths, joinpath(full_member_dir, nc_files[1]))
-        end
+    for i in 1:count(f -> isdir(f), joinpath.(output_dir, readdir(output_dir)))
+        member_dir = joinpath(output_dir, "member$i")
+        push!(filepaths, joinpath(member_dir, filter(x -> endswith(x, ".nc"), readdir(member_dir))[1]))
     end
     # Create and initialize ensemble mean netcdf file
     file_mean = joinpath(output_dir, "ensemble_mean.nc")
     ds_mean = Dataset(file_mean, "c")
     ds = Dataset(filepaths[1])
-    ds_mean["time"] = ds["time"]
-    ds_mean["longitude"] = ds["longitude"]
-    ds_mean["latitude"] = ds["latitude"]
-    ds_mean["height"] = ds["height"]
-    ds_mean["spec001_mr"] = ds["spec001_mr"]
-    ds_mean["TD_spec001"] = ds["TD_spec001"]
-    mean_conc = Array(ds["spec001_mr"])
-    mean_depo = Array(ds["TD_spec001"])
-    close(ds)
-    # Sum the data across all ensemble members
-    for file in filepaths[2:end]
-        ds = Dataset(file)
-        mean_conc .+= Array(ds["spec001_mr"])
-        mean_depo .+= Array(ds["TD_spec001"])
-        close(ds)
+    # Copy coordinates
+    for coord in ["time", "longitude", "latitude", "height"]
+        ds_mean[coord] = ds[coord]
     end
-    # Divide by number of members to get the mean
-    mean_conc ./= length(filepaths)
-    mean_depo ./= length(filepaths)
-    # Write the results to ensemble netcdf file
-    ds_mean["spec001_mr"][:] = mean_conc
-    ds_mean["TD_spec001"][:] = mean_depo
+    species = [replace(v, "_mr" => "") for v in filter(v -> occursin(r"spec\d{3}_mr$", v), keys(ds))]
+    close(ds)
+
+    # Loop over each species
+    for spec in species
+        ds = Dataset(filepaths[1])
+        # Initialize mean concentration for this species
+        concname = spec * "_mr"
+        ds_mean[concname] = ds[concname]
+        mean_conc = Array(ds_mean[concname])
+        # Initialize deposition if present
+        depo_count = 0
+        mean_depo = Array([])
+        tdname = "TD_" * spec
+        if haskey(ds, tdname)
+            depo_count = 1
+            ds_mean[tdname] = ds[tdname]
+            mean_depo = Array(ds_mean[tdname])
+        end
+        close(ds)
+
+        # Sum over all other ensemble members
+        for file in filepaths[2:end]
+            ds = Dataset(file)
+            mean_conc .+= Array(ds[concname])
+            if haskey(ds, tdname)
+                depo_count += 1
+                mean_depo .+= Array(ds[tdname])
+            end
+            close(ds)
+        end
+
+        # Divide by number of members and write to mean file
+        mean_conc ./= length(filepaths)
+        ds_mean[concname][:] = mean_conc
+        if depo_count > 0
+            mean_depo ./= depo_count
+            ds_mean[tdname][:] = mean_depo
+        end
+    end
     close(ds_mean)
 end
 
