@@ -1,6 +1,6 @@
 name = "Flexpart"
 uuid = "fb362612-c2d8-4302-a9fd-a07f2890630f"
-authors = ["Tristan Carion (tcarion) <tristancarion@gmail.com>, Paul Perez (PrzPaul) <paullouisperez@gmail.com>, and contributors"]
+authors = ["Tristan Carion (tcarion) <tristancarion@gmail.com> and contributors"]
 version = "0.2.0"
 
 [deps]

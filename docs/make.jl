@@ -6,11 +6,11 @@ DocMeta.setdocmeta!(Flexpart, :DocTestSetup, :(using Flexpart); recursive=true)
 makedocs(;
     modules=[Flexpart],
     authors="tcarion <tristancarion@gmail.com> and contributors",
-    repo="https://github.com/PaulPerezRMA/Flexpart.jl/blob/{commit}{path}#{line}",
+    repo="https://github.com/tcarion/Flexpart.jl/blob/{commit}{path}#{line}",
     sitename="Flexpart.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://PaulPerezRMA.github.io/Flexpart.jl",
+        canonical="https://tcarion.github.io/Flexpart.jl",
         edit_link="main",
         assets=String[],
     ),
@@ -24,6 +24,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/PaulPerezRMA/Flexpart.jl",
+    repo="github.com/tcarion/Flexpart.jl",
     devbranch="main",
 )

@@ -14,7 +14,7 @@ Flexpart.jl is a Julia interface to the [FLEXPART](https://www.flexpart.eu/) Lag
 ## Installation
 The package is not yet on the official registry, and must be installed this way:
 ```julia
-using Pkg; Pkg.add(url="https://github.com/PrzPaul/Flexpart.jl")
+using Pkg; Pkg.add(url="https://github.com/tcarion/Flexpart.jl")
 ```
 
 ## Quick start
@@ -32,7 +32,7 @@ fpsim = FlexpartSim("existing")
 fpsim = FlexpartSim()
 ```
 
-Then let's define the location of the input files. The retrieval and pre-processing of the input meteorological data for Flexpart needs to be done with the [FlexExtract.jl](https://github.com/PrzPaul/FlexExtract.jl) package.
+Then let's define the location of the input files. The retrieval and pre-processing of the input meteorological data for Flexpart needs to be done with the [FlexExtract.jl](https://github.com/tcarion/FlexExtract.jl) package.
 ```julia
 fpsim[:input] = "path/to/inputs"
 
