@@ -157,6 +157,10 @@ function create(path::String; simtype = Deterministic)
     copyall(DEFAULT_FP_DIR, path)
     isdir(joinpath(DEFAULT_FP_DIR, "input")) || mkdir(joinpath(DEFAULT_FP_DIR, "input"))
     isdir(joinpath(DEFAULT_FP_DIR, "output")) || mkdir(joinpath(DEFAULT_FP_DIR, "output"))
+    oh_fields_dir = joinpath(path, "options/OH_FIELDS")
+    mkdir(oh_fields_dir)
+    copyall(FLEXIN_PATH, oh_fields_dir)
+    chmod(joinpath(oh_fields_dir, "OH_variables.bin"), 0o755)
     newfpdir = FlexpartSim{simtype}(pathnames_path(path))
     newfpdir
 end

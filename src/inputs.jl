@@ -32,7 +32,7 @@ DeterministicInput(path::String) = _input_from_filename(path)
 """
     EnsembleInput
 
-Object that represents a ensemble input file.
+Object that represents an ensemble input file.
 
 $(TYPEDFIELDS)
 """
@@ -57,16 +57,20 @@ Base.string(in::AbstractInputFile) = convert(String, in)
 
 input_type(::AbstractInputFile{T}) where T = T
 
-function _input_from_filename(path::String)
+function _input_from_filename(path::String; member::Union{Nothing, Int}=nothing)
     filename = basename(path)
     dirpath = dirname(path)
     m = match(FLEXEXTRACT_OUTPUT_REG, filename)
     if !isnothing(m)
         valid_time = _construct_date(m)
-        if isnothing(m[:member])
-            DeterministicInput(valid_time, filename, dirpath)
+        if isnothing(member)
+            if isnothing(m[:member])
+                DeterministicInput(valid_time, filename, dirpath)
+            else
+                EnsembleInput(valid_time, filename, parse(Int, m[:member]), dirpath)
+            end
         else
-            EnsembleInput(valid_time, filename, parse(Int, m[:member]), dirpath)
+            EnsembleInput(valid_time, filename, member, dirpath)
         end
     else
         nothing
@@ -99,8 +103,16 @@ end
 
 function inputs_from_dir(path::String)
     infiles = readdir(path, join = true)
-    length(infiles) == 0 && (return AbstractInputFile[])
-    _input_from_filename.(readdir(path, join = true))
+    isempty(infiles) && return AbstractInputFile[]
+    m = match(FLEXEXTRACT_OUTPUT_REG, basename(infiles[1]))
+    if isnothing(m) || isnothing(m[:member])
+        _input_from_filename.(infiles)
+    else
+        member_tags = [match(FLEXEXTRACT_OUTPUT_REG, basename(f))[:member] for f in infiles]
+        unique_tags = unique(member_tags)
+        member_numbers = [findfirst(==(tag), unique_tags) for tag in member_tags]
+        [_input_from_filename(file; member=num) for (file, num) in zip(infiles, member_numbers)]
+    end
 end
 
 struct Available <: AbstractVector{AbstractInputFile}
