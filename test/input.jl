@@ -22,7 +22,7 @@ end
     @test length(infilesdet) == 3
     @test length(infilesens) == 4
     @test filter(x -> Dates.Hour(x.time) >= Dates.Hour(1), infilesdet)[1] == infilesdet[2]
-    @test filter(x -> x.member == 1, infilesens)[1] == infilesens[2]
+    @test filter(x -> x.member == 1, infilesens)[1] == infilesens[1]
 end
 
 av_default_path = joinpath(DEFAULT_FP_DIR, "AVAILABLE")
