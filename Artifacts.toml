@@ -1,5 +1,5 @@
 [flexpart_data]
-git-tree-sha1 = "f40c55a08487de4b8d9288ed00d06739223f2a33"
+git-tree-sha1 = "192594523cfd24fdaadd68618b5b1fb37f3412b6"
 
     [[flexpart_data.download]]
     sha256 = "8f2e3e68edfc52e59a5c0e17bdbfbcacdf188ebbb34b25eb26a3cec3bc7d8632"
