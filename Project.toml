@@ -1,7 +1,7 @@
 name = "Flexpart"
 uuid = "fb362612-c2d8-4302-a9fd-a07f2890630f"
 authors = ["Tristan Carion (tcarion) <tristancarion@gmail.com> and contributors"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"

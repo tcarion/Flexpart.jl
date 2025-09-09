@@ -51,7 +51,7 @@ export
 #     """
 # const CMD_FLEXPART = FLEXPART()
 # TODO: UPDATE TO REAL ARTIFACT
-const ROOT_ARTIFACT_FLEXPART_DATA = artifact"flexpart_data"
+const ROOT_ARTIFACT_FLEXPART_DATA = joinpath(artifact"flexpart_data", "flexpart_data-0.1.0")
 # const ROOT_ARTIFACT_FLEXPART = "test/flexpart_data"
 
 # const OPTIONS_DIR_DEFAULT = "./options"
