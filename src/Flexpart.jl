@@ -6,6 +6,8 @@ using Pkg.Artifacts
 using Dates
 using DataStructures: OrderedDict, DefaultOrderedDict
 using DocStringExtensions
+using NCDatasets
+using ImageMorphology
 using FLEXPART_jll
 # using Debugger
 # using PyPlot
@@ -47,7 +49,7 @@ export
 
 #     $(METHODLIST)
 #     """
-const CMD_FLEXPART = FLEXPART()
+# const CMD_FLEXPART = FLEXPART()
 # TODO: UPDATE TO REAL ARTIFACT
 const ROOT_ARTIFACT_FLEXPART_DATA = joinpath(artifact"flexpart_data", "flexpart_data-0.1.0")
 # const ROOT_ARTIFACT_FLEXPART = "test/flexpart_data"
